@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 
-const connectionString = "mongodb+srv://admin:hummusery@hummusery.0zbqtlj.mongodb.net/?retryWrites=true&w=majority&appName=Hummusery";
+const connectionString = process.env.DATABASE_URL;
 
 async function checkMongoConnection() {
   if (!connectionString) {

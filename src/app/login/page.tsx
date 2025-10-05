@@ -9,14 +9,15 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!email || !password) {
       setError("Please enter email and password");
       return;
     }
-    // placeholder: handle authentication
+    // Basic authentication logics
+
     console.log("login", { email, password, remember });
   };
 

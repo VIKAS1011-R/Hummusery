@@ -9,30 +9,71 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
+    setLoading(true);
+
+    // Client-side validation
     if (!name || !email || !password || !confirm) {
       setError("Please fill out all fields");
+      setLoading(false);
       return;
     }
     if (password !== confirm) {
       setError("Passwords do not match");
+      setLoading(false);
       return;
     }
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
+      setLoading(false);
       return;
     }
-    // placeholder: handle sign up
-    console.log("signup", { name, email });
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('Account created successfully! You can now sign in.');
+        // Clear form
+        window.open("/")
+      } else {
+        setError(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthCard title="Create account" subtitle="Join Hummusery for exclusive offers">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="text-sm text-red-400">{error}</div>}
+      <form onSubmit={handleSubmit} method="POST" className="space-y-4">
+        {error && (
+          <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-900/20 border border-green-500 text-green-400 px-4 py-3 rounded-lg text-sm">
+            {success}
+          </div>
+        )}
 
         <label className="block">
           <span className="text-sm text-gray-300">Full name</span>
@@ -84,9 +125,10 @@ export default function SignupPage() {
 
         <button
           type="submit"
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition-transform transform hover:scale-105"
+          disabled={loading}
+          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-full font-semibold transition-transform transform hover:scale-105 disabled:hover:scale-100"
         >
-          Create account
+          {loading ? 'Creating account...' : 'Create account'}
         </button>
 
         <div className="text-center text-sm text-gray-400">
