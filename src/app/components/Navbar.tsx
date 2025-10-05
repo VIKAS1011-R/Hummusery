@@ -48,13 +48,11 @@ const Navbar: React.FC = () => {
               <Link href="/login">
                 <button
                   type="button"
-                  className={`px-5 py-2 rounded-full transition-all duration-200 ${
-                    pathname === "/login"
-                      ? "bg-orange-500 text-white transform scale-105"
-                      : "bg-transparent text-white border-2 border-transparent hover:bg-orange-500 hover:text-white"
-                  }`}
+                  className={`px-5 py-2 rounded-full bg-orange-500 text-white transform transition-all duration-200 hover:scale-105 ${
+                    pathname === "/login" ? "ring-2 ring-orange-300" : ""
+                  } hover:bg-transparent hover:text-orange-500`}
                 >
-                  Sign in
+                  Sign In
                 </button>
               </Link>
             </div>
@@ -85,7 +83,10 @@ const Navbar: React.FC = () => {
             </a>
 
             <Link href="/login">
-              <a onClick={closeMenu} className="block w-full text-center px-4 py-2 mt-2 bg-transparent text-white border border-gray-700 rounded-lg hover:bg-gray-800">
+              <a
+                onClick={closeMenu}
+                className="block w-full text-center px-4 py-2 mt-2 bg-orange-500 text-white rounded-lg transition-transform transform hover:scale-105 hover:text-orange-500"
+              >
                 Sign in
               </a>
             </Link>
