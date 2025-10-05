@@ -1,9 +1,14 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X, ChefHat } from "lucide-react";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -11,6 +16,13 @@ const Navbar: React.FC = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const closeMenu = () => setIsOpen(false);
+
+  const linkClass = (href: string) =>
+    `text-white transition-colors duration-200 ${
+      pathname === href ? "text-orange-500 font-semibold" : "hover:text-orange-500"
+    }`;
 
   return (
     <nav
@@ -22,18 +34,30 @@ const Navbar: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center space-x-2 cursor-pointer">
+          <Link href="/" className="flex items-center space-x-2 cursor-pointer">
             <ChefHat className="h-8 w-8 text-orange-500" />
             <span className="text-2xl font-bold text-white">Hummusery</span>
-          </div>
+          </Link>
 
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#home" className="text-white hover:text-orange-500 transition-colors duration-200">Home</a>
-            <a href="#menu" className="text-white hover:text-orange-500 transition-colors duration-200">Menu</a>
-            <a href="#contact" className="text-white hover:text-orange-500 transition-colors duration-200">Contact Us</a>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105">
-              Login
-            </button>
+          <div className="hidden md:flex items-center space-x-6">
+            <a href="#home" className={linkClass("/#home")}>Home</a>
+            <a href="#menu" className={linkClass("/#menu")}>Menu</a>
+            <a href="#contact" className={linkClass("/#contact")}>Contact Us</a>
+
+            <div className="flex items-center space-x-3">
+              <Link href="/login">
+                <button
+                  type="button"
+                  className={`px-5 py-2 rounded-full transition-all duration-200 ${
+                    pathname === "/login"
+                      ? "bg-orange-500 text-white transform scale-105"
+                      : "bg-transparent text-white border-2 border-transparent hover:bg-orange-500 hover:text-white"
+                  }`}
+                >
+                  Sign in
+                </button>
+              </Link>
+            </div>
           </div>
 
           <button
@@ -50,10 +74,21 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="md:hidden bg-gray-900 border-t border-gray-800">
           <div className="px-4 py-4 space-y-2">
-            <a href="#home" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg">Home</a>
-            <a href="#menu" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg">Menu</a>
-            <a href="#contact" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg">Contact Us</a>
-            <button className="w-full mt-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full" type="button">Login</button>
+            <a href="#home" onClick={closeMenu} className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg">
+              Home
+            </a>
+            <a href="#menu" onClick={closeMenu} className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg">
+              Menu
+            </a>
+            <a href="#contact" onClick={closeMenu} className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg">
+              Contact Us
+            </a>
+
+            <Link href="/login">
+              <a onClick={closeMenu} className="block w-full text-center px-4 py-2 mt-2 bg-transparent text-white border border-gray-700 rounded-lg hover:bg-gray-800">
+                Sign in
+              </a>
+            </Link>
           </div>
         </div>
       )}
