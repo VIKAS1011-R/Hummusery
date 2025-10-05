@@ -4,7 +4,7 @@ const connectionString = process.env.DATABASE_URL;
 
 async function checkMongoConnection() {
   if (!connectionString) {
-    console.error('❌ DATABASE_URL environment variable is not set');
+    console.error(' DATABASE_URL environment variable is not set');
     return false;
   }
   
@@ -17,10 +17,10 @@ async function checkMongoConnection() {
     // Test the connection
     await client.db().admin().ping();
     
-    console.log('✅ MongoDB connection successful!');
+    console.log('MongoDB connection successful!');
     return true;
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error);
+    console.error('MongoDB connection failed:', error);
     return false;
   } finally {
     await client.close();
