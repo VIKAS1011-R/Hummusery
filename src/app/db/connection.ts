@@ -17,9 +17,9 @@ export async function connectToDatabase(): Promise<Db> {
   try {
     client = new MongoClient(connectionString);
     await client.connect();
-    db = client.db();
+    db = client.db('Hummusery_Data');
     
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB database: Hummusery_Data');
     return db;
   } catch (error) {
     console.error('❌ Failed to connect to MongoDB:', error);

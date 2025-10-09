@@ -1,26 +1,26 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient } from "mongodb";
 
 const connectionString = process.env.DATABASE_URL;
 
 async function checkMongoConnection() {
   if (!connectionString) {
-    console.error(' DATABASE_URL environment variable is not set');
+    console.error(" DATABASE_URL environment variable is not set");
     return false;
   }
-  
+
   const client = new MongoClient(connectionString);
-  
+
   try {
-    console.log('Attempting to connect to MongoDB...');
+    console.log("Attempting to connect to MongoDB...");
     await client.connect();
-    
+
     // Test the connection
-    await client.db().admin().ping();
-    
-    console.log('MongoDB connection successful!');
+    await client.db("Hummusery_Data").admin().ping();
+
+    console.log("MongoDB connection successful to Hummusery_Data database!");
     return true;
   } catch (error) {
-    console.error('MongoDB connection failed:', error);
+    console.error("MongoDB connection failed:", error);
     return false;
   } finally {
     await client.close();

@@ -19,11 +19,11 @@ export async function GET() {
 
   try {
     await client.connect();
-    await client.db().admin().ping();
+    await client.db('Hummusery_Data').admin().ping();
 
     return NextResponse.json({
       status: "success",
-      message: "MongoDB connection successful",
+      message: "MongoDB connection successful to Hummusery_Data database",
       connected: true,
     });
   } catch (error) {
