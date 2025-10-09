@@ -53,7 +53,11 @@ export default function LoginPage() {
   return (
     <AuthCard title="Welcome back" subtitle="Sign in to your Hummusery account">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="text-sm text-red-400">{error}</div>}
+        {error && (
+          <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
         <label className="block">
           <span className="text-sm text-gray-300">Email</span>
@@ -61,7 +65,8 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            disabled={loading}
+            className="mt-1 w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
             placeholder="you@example.com"
             required
           />
@@ -73,7 +78,8 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            disabled={loading}
+            className="mt-1 w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
             placeholder="••••••••"
             required
           />
@@ -85,7 +91,8 @@ export default function LoginPage() {
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="h-4 w-4 rounded bg-gray-700 text-orange-500 focus:ring-orange-500"
+              disabled={loading}
+              className="h-4 w-4 rounded bg-gray-700 text-orange-500 focus:ring-orange-500 disabled:cursor-not-allowed"
             />
             <span className="ml-2">Remember me</span>
           </label>
@@ -95,9 +102,10 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition-transform transform hover:scale-105"
+          disabled={loading}
+          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-full font-semibold transition-transform transform hover:scale-105 disabled:hover:scale-100"
         >
-          Sign in
+          {loading ? 'Signing in...' : 'Sign in'}
         </button>
 
         <div className="text-center text-sm text-gray-400">

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import AuthCard from "../components/AuthCard";
+import { useAuth } from "../context/AuthContext";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -11,6 +13,9 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  const router = useRouter();
+  const { setUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,9 +52,24 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Account created successfully! You can now sign in.');
+        // Update auth context with user data
+        setUser({
+          name: data.user.name,
+          email: data.user.email,
+        });
+        
+        setSuccess('Account created successfully! Redirecting...');
+        
         // Clear form
-        window.open("/")
+        setName('');
+        setEmail('');
+        setPassword('');
+        setConfirm('');
+        
+        // Redirect to home page after a short delay
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
       } else {
         setError(data.error || 'Something went wrong. Please try again.');
       }

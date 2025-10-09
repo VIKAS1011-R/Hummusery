@@ -3,14 +3,15 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChefHat } from "lucide-react";
+import { Menu, X, ChefHat, Settings, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import UserDropdown from "./UserDropdown";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
   const pathname = usePathname();
-  const { user } = useAuth(); // Removed logout
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -54,7 +55,7 @@ const Navbar: React.FC = () => {
 
             <div className="flex items-center space-x-3">
               {user ? (
-                <span className="text-orange-500">{user.name}</span>
+                <UserDropdown />
               ) : (
                 <Link href="/login" className="inline-block">
                   <button
@@ -105,7 +106,30 @@ const Navbar: React.FC = () => {
             </a>
 
             {user ? (
-              <div className="px-4 py-2 text-orange-500">{user.name}</div>
+              <div className="border-t border-gray-700 pt-2 mt-2">
+                <div className="px-4 py-2 text-orange-500 font-medium">{user.name}</div>
+                <button
+                  onClick={() => {
+                    closeMenu();
+                    // Navigate to settings - you can implement this route
+                    window.location.href = '/settings';
+                  }}
+                  className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                >
+                  <Settings className="h-4 w-4 mr-3" />
+                  Settings
+                </button>
+                <button
+                  onClick={async () => {
+                    closeMenu();
+                    await logout();
+                  }}
+                  className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 hover:text-red-400 rounded-lg transition-colors duration-200"
+                >
+                  <LogOut className="h-4 w-4 mr-3" />
+                  Logout
+                </button>
+              </div>
             ) : (
               <Link href="/login" className="block">
                 <button
