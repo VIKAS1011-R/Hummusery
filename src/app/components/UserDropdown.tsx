@@ -3,12 +3,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useRouter } from 'next/navigation';
 
 const UserDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
+  const { addToast } = useToast();
   const router = useRouter();
 
   // Close dropdown when clicking outside
@@ -30,6 +32,7 @@ const UserDropdown: React.FC = () => {
 
   const handleLogout = async () => {
     setIsOpen(false);
+    addToast('You have been logged out successfully', 'info');
     await logout();
   };
 

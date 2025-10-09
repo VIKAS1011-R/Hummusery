@@ -1,6 +1,8 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import ToastContainer from './components/ToastContainer';
 
 export const metadata = {
   title: "Hummusery",
@@ -12,9 +14,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <head />
       <body className="bg-gray-900 text-white antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            {children}
+            <ToastContainer />
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

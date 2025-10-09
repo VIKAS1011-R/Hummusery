@@ -9,10 +9,10 @@ type MenuItem = {
 
 const MenuSection: React.FC = () => {
   const menuItems: MenuItem[] = [
-    { name: "Grilled Salmon", price: "$28", desc: "Fresh Atlantic salmon with herbs", img: "🐟" },
-    { name: "Beef Tenderloin", price: "$32", desc: "Prime cut with truffle sauce", img: "🥩" },
-    { name: "Pasta Carbonara", price: "$22", desc: "Classic Italian recipe", img: "🍝" },
-    { name: "Caesar Salad", price: "$14", desc: "Crispy romaine with parmesan", img: "🥗" }
+    { name: "Grilled Salmon", price: "₹2,100", desc: "Fresh Atlantic salmon with herbs", img: "🐟" },
+    { name: "Beef Tenderloin", price: "₹2,400", desc: "Prime cut with truffle sauce", img: "🥩" },
+    { name: "Pasta Carbonara", price: "₹1,650", desc: "Classic Italian recipe", img: "🍝" },
+    { name: "Caesar Salad", price: "₹1,050", desc: "Crispy romaine with parmesan", img: "🥗" }
   ];
 
   return (

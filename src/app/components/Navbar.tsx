@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChefHat, Settings, LogOut } from "lucide-react";
+import { Menu, X, ChefHat, Settings, LogOut, Shield } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import UserDropdown from "./UserDropdown";
 
 const Navbar: React.FC = () => {
@@ -12,6 +13,7 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState<boolean>(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -52,6 +54,11 @@ const Navbar: React.FC = () => {
             <a href="#contact" className={linkClass("/#contact")}>
               Contact Us
             </a>
+            {user && (
+              <Link href="/admin" className={linkClass("/admin")}>
+                Admin
+              </Link>
+            )}
 
             <div className="flex items-center space-x-3">
               {user ? (
@@ -108,6 +115,15 @@ const Navbar: React.FC = () => {
             {user ? (
               <div className="border-t border-gray-700 pt-2 mt-2">
                 <div className="px-4 py-2 text-orange-500 font-medium">{user.name}</div>
+                <Link href="/admin" className="block">
+                  <button
+                    onClick={closeMenu}
+                    className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                  >
+                    <Shield className="h-4 w-4 mr-3" />
+                    Admin Panel
+                  </button>
+                </Link>
                 <button
                   onClick={() => {
                     closeMenu();
@@ -122,6 +138,7 @@ const Navbar: React.FC = () => {
                 <button
                   onClick={async () => {
                     closeMenu();
+                    addToast('You have been logged out successfully', 'info');
                     await logout();
                   }}
                   className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 hover:text-red-400 rounded-lg transition-colors duration-200"

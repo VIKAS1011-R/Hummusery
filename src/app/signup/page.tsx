@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthCard from "../components/AuthCard";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -16,6 +17,7 @@ export default function SignupPage() {
   
   const router = useRouter();
   const { setUser } = useAuth();
+  const { addToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +60,8 @@ export default function SignupPage() {
           email: data.user.email,
         });
         
-        setSuccess('Account created successfully! Redirecting...');
+        // Show toast and redirect
+        addToast(`Welcome to Hummusery, ${data.user.name}!`, 'success');
         
         // Clear form
         setName('');
@@ -69,7 +72,7 @@ export default function SignupPage() {
         // Redirect to home page after a short delay
         setTimeout(() => {
           router.push('/');
-        }, 1500);
+        }, 1000);
       } else {
         setError(data.error || 'Something went wrong. Please try again.');
       }

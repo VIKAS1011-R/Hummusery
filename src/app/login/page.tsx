@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import AuthCard from "../components/AuthCard";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { setUser } = useAuth();
+  const { addToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -38,6 +40,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         setUser(data.user);
+        addToast(`Welcome back, ${data.user.name}!`, 'success');
         router.push('/');
       } else {
         setError(data.error || 'Invalid email or password');
