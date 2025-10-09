@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Mock data - in production, this would be stored in a database
-let mockOrders = [
+const mockOrders = [
   {
     id: "1",
     orderNumber: "ORD-001",
