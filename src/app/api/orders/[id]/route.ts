@@ -98,10 +98,10 @@ const mockOrders = [
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id: orderId } = await params;
     const order = mockOrders.find(o => o.id === orderId);
     
     if (!order) {
@@ -126,10 +126,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id: orderId } = await params;
     const body = await request.json();
     
     const orderIndex = mockOrders.findIndex(o => o.id === orderId);
@@ -162,10 +162,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id: orderId } = await params;
     const orderIndex = mockOrders.findIndex(o => o.id === orderId);
     
     if (orderIndex === -1) {
