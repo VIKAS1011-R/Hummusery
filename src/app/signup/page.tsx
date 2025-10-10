@@ -58,6 +58,7 @@ export default function SignupPage() {
         setUser({
           name: data.user.name,
           email: data.user.email,
+          role: data.user.role,
         });
         
         // Show toast and redirect
