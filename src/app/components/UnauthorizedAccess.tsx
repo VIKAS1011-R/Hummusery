@@ -18,7 +18,7 @@ export default function UnauthorizedAccess() {
           </h1>
           
           <p className="text-gray-400 mb-6">
-            You don't have permission to access this page. Admin privileges are required.
+            You don&apos;t have permission to access this page. Admin privileges are required.
           </p>
           
           <Link

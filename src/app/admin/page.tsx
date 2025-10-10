@@ -29,6 +29,18 @@ interface Order {
   createdAt: string;
 }
 
+interface MenuItem {
+  _id: string;
+  name: string;
+  ingredients: string;
+  isVeg: boolean;
+  price: number;
+  category: string;
+  isAvailable: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export default function AdminPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -39,7 +51,7 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">("all");
   const [activeTab, setActiveTab] = useState<"orders" | "menu">("orders");
   const [showAddMenuForm, setShowAddMenuForm] = useState(false);
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
 
   useEffect(() => {
