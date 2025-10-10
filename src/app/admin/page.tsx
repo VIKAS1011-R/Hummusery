@@ -3,8 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/app/context/ToastContext";
 import OrderCard from "@/app/components/OrderCard";
-import { Loader2, Filter } from "lucide-react";
+import { Loader2, Filter, Plus, UtensilsCrossed, ClipboardList } from "lucide-react";
+import AddMenuItemForm from "@/app/components/AddMenuItemForm";
+import MenuItemCard from "@/app/components/MenuItemCard";
 
 interface OrderItem {
   id: string;
@@ -29,22 +32,35 @@ interface Order {
 export default function AdminPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { addToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">("all");
+  const [activeTab, setActiveTab] = useState<"orders" | "menu">("orders");
+  const [showAddMenuForm, setShowAddMenuForm] = useState(false);
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [menuLoading, setMenuLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin (you can modify this logic based on your auth system)
+    // Check if user is authenticated
     if (!user) {
       router.push("/login");
       return;
     }
 
-    // For now, we'll assume any logged-in user can access admin
-    // In production, you'd check for admin role
+    // Check if user has admin role
+    if (user.role !== "admin") {
+      addToast("Access denied. Admin privileges required.", "error");
+      router.push("/");
+      return;
+    }
+
     fetchOrders();
-  }, [user, router]);
+    if (activeTab === "menu") {
+      fetchMenuItems();
+    }
+  }, [user, router, activeTab, addToast]);
 
   const fetchOrders = async () => {
     try {
@@ -90,6 +106,36 @@ export default function AdminPage() {
     }
   };
 
+  const fetchMenuItems = async () => {
+    try {
+      setMenuLoading(true);
+      const response = await fetch("/api/menu?includeUnavailable=true");
+      if (!response.ok) {
+        throw new Error("Failed to fetch menu items");
+      }
+      const data = await response.json();
+      setMenuItems(data.menuItems || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch menu items");
+    } finally {
+      setMenuLoading(false);
+    }
+  };
+
+  const handleMenuItemAdded = () => {
+    setShowAddMenuForm(false);
+    fetchMenuItems();
+    setError(null);
+  };
+
+  const handleTabChange = (tab: "orders" | "menu") => {
+    setActiveTab(tab);
+    setError(null);
+    if (tab === "menu" && menuItems.length === 0) {
+      fetchMenuItems();
+    }
+  };
+
   // Filter orders based on selected status
   const filteredOrders = statusFilter === "all" 
     ? orders 
@@ -119,11 +165,17 @@ export default function AdminPage() {
           <div>
             <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
             <p className="text-gray-400 mt-1">
-              Total Orders: {orders.length} | 
-              Pending: {statusCounts.pending} | 
-              Preparing: {statusCounts.preparing} | 
-              Ready: {statusCounts.ready} | 
-              Completed: {statusCounts.completed}
+              {activeTab === "orders" ? (
+                <>
+                  Total Orders: {orders.length} | 
+                  Pending: {statusCounts.pending} | 
+                  Preparing: {statusCounts.preparing} | 
+                  Ready: {statusCounts.ready} | 
+                  Completed: {statusCounts.completed}
+                </>
+              ) : (
+                <>Menu Items: {menuItems.length} | Available: {menuItems.filter(item => item.isAvailable).length}</>
+              )}
             </p>
           </div>
           <button
@@ -134,13 +186,42 @@ export default function AdminPage() {
           </button>
         </div>
 
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-8">
+          <button
+            onClick={() => handleTabChange("orders")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === "orders"
+                ? "bg-orange-500 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Orders Management
+          </button>
+          <button
+            onClick={() => handleTabChange("menu")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === "menu"
+                ? "bg-orange-500 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+          >
+            <UtensilsCrossed className="h-4 w-4" />
+            Menu Management
+          </button>
+        </div>
+
         {error && (
           <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6">
             {error}
           </div>
         )}
 
-        {/* Filter Section */}
+        {/* Orders Management Tab */}
+        {activeTab === "orders" && (
+          <>
+            {/* Filter Section */}
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <Filter className="h-5 w-5 text-gray-400" />
@@ -247,6 +328,72 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+          </>
+        )}
+
+        {/* Menu Management Tab */}
+        {activeTab === "menu" && (
+          <div className="space-y-6">
+            {/* Add Menu Item Button */}
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-white">
+                Menu Items ({menuItems.length})
+              </h2>
+              <button
+                onClick={() => setShowAddMenuForm(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Add Menu Item
+              </button>
+            </div>
+
+            {/* Menu Items Grid */}
+            {menuLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+              </div>
+            ) : menuItems.length === 0 ? (
+              <div className="text-center py-12">
+                <UtensilsCrossed className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400 text-lg mb-4">No menu items found</p>
+                <button
+                  onClick={() => setShowAddMenuForm(true)}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Add Your First Menu Item
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {menuItems.map((item) => (
+                  <MenuItemCard
+                    key={item._id}
+                    item={item}
+                    onEdit={(item) => {
+                      // TODO: Implement edit functionality
+                      console.log("Edit item:", item);
+                    }}
+                    onDelete={async (itemId) => {
+                      // TODO: Implement delete functionality
+                      if (confirm("Are you sure you want to delete this menu item?")) {
+                        console.log("Delete item:", itemId);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Add Menu Item Form Modal */}
+        {showAddMenuForm && (
+          <AddMenuItemForm
+            onSuccess={handleMenuItemAdded}
+            onCancel={() => setShowAddMenuForm(false)}
+          />
+        )}
       </div>
     </div>
   );

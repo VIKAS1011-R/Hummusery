@@ -48,13 +48,13 @@ const Navbar: React.FC = () => {
             <a href="#home" className={linkClass("/#home")}>
               Home
             </a>
-            <a href="#menu" className={linkClass("/#menu")}>
+            <Link href="/menu" className={linkClass("/menu")}>
               Menu
-            </a>
+            </Link>
             <a href="#contact" className={linkClass("/#contact")}>
               Contact Us
             </a>
-            {user && (
+            {user && user.role === "admin" && (
               <Link href="/admin" className={linkClass("/admin")}>
                 Admin
               </Link>
@@ -97,13 +97,13 @@ const Navbar: React.FC = () => {
             >
               Home
             </a>
-            <a
-              href="#menu"
+            <Link
+              href="/menu"
               onClick={closeMenu}
               className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg"
             >
               Menu
-            </a>
+            </Link>
             <a
               href="#contact"
               onClick={closeMenu}
@@ -115,15 +115,17 @@ const Navbar: React.FC = () => {
             {user ? (
               <div className="border-t border-gray-700 pt-2 mt-2">
                 <div className="px-4 py-2 text-orange-500 font-medium">{user.name}</div>
-                <Link href="/admin" className="block">
-                  <button
-                    onClick={closeMenu}
-                    className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
-                  >
-                    <Shield className="h-4 w-4 mr-3" />
-                    Admin Panel
-                  </button>
-                </Link>
+                {user.role === "admin" && (
+                  <Link href="/admin" className="block">
+                    <button
+                      onClick={closeMenu}
+                      className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                    >
+                      <Shield className="h-4 w-4 mr-3" />
+                      Admin Panel
+                    </button>
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     closeMenu();

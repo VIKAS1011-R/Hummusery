@@ -13,6 +13,8 @@ A production-ready Next.js template optimized for Vercel deployment with TypeScr
 - 🔐 Authentication system
 - 👨‍💼 Admin dashboard for order management
 - 🍽️ Restaurant order tracking system
+- 📋 Dynamic menu system with MongoDB integration
+- 🔍 Menu filtering and search functionality
 
 ## Getting Started
 
@@ -42,6 +44,14 @@ npm run dev
 - `GET /api/orders/[id]` - Get specific order
 - `PATCH /api/orders/[id]` - Update order status
 - `DELETE /api/orders/[id]` - Delete order
+
+### Menu Management
+- `GET /api/menu` - Get all menu items (supports query params: includeUnavailable, category, vegOnly)
+- `POST /api/menu` - Create new menu item
+- `GET /api/menu/[id]` - Get specific menu item
+- `PATCH /api/menu/[id]` - Update menu item
+- `DELETE /api/menu/[id]` - Delete menu item
+- `POST /api/menu/seed` - Seed database with sample menu items
 
 ### Other
 - `GET /api/hello` - Returns a welcome message
@@ -74,6 +84,7 @@ vercel
 │   │   ├── api/                  # API routes
 │   │   │   ├── auth/             # Authentication endpoints
 │   │   │   ├── orders/           # Order management endpoints
+│   │   │   ├── menu/             # Menu management endpoints
 │   │   │   └── hello/            # Example endpoint
 │   │   ├── components/           # Reusable components
 │   │   │   ├── OrderCard.tsx     # Order display component
@@ -82,9 +93,14 @@ vercel
 │   │   ├── context/              # React contexts
 │   │   │   ├── AuthContext.tsx   # Authentication context
 │   │   │   └── ToastContext.tsx  # Toast notifications
+│   │   ├── db/                   # Database layer
+│   │   │   ├── models/           # Data models (User, MenuItem)
+│   │   │   ├── services/         # Database services
+│   │   │   └── seeds/            # Database seeding scripts
 │   │   ├── login/                # Login page
 │   │   ├── signup/               # Registration page
 │   │   ├── settings/             # User settings
+│   │   ├── menu/                 # Menu browsing page
 │   │   ├── globals.css           # Global styles
 │   │   ├── layout.tsx            # Root layout
 │   │   └── page.tsx              # Home page
@@ -130,3 +146,58 @@ The admin dashboard provides order management functionality for restaurant staff
 2. **Preparing** → Kitchen is actively preparing the order
 3. **Ready** → Order is complete and ready for customer pickup
 4. **Completed** → Order has been collected by customer
+
+## Menu System
+
+The application features a comprehensive menu management system:
+
+### User Menu Experience (`/menu`)
+- **Dynamic Menu Display**: Fetches menu items from MongoDB in real-time
+- **Advanced Filtering**: Filter by category, vegetarian/non-vegetarian, or search by name/ingredients
+- **Responsive Design**: Optimized for desktop and mobile viewing
+- **Category Organization**: Items grouped by categories (Appetizers, Main Course, Salads, etc.)
+- **Visual Indicators**: Clear veg/non-veg symbols and availability status
+- **Price Display**: Formatted in INR with proper localization
+
+### Homepage Menu Section
+- **Featured Items**: Shows first 4 menu items as signature dishes
+- **Dynamic Loading**: Fetches from database with loading states
+- **Fallback Handling**: Graceful error handling if API fails
+- **Call-to-Action**: "View Full Menu" button linking to complete menu page
+
+### Admin Menu Management
+- **Add New Items**: Comprehensive form with validation
+- **Visual Management**: Card-based layout with edit/delete options
+- **Real-time Updates**: Instant reflection of changes
+- **Category Management**: Organized by food categories
+- **Availability Control**: Toggle item availability for customers
+
+## Admin Access Control
+
+The application now implements proper role-based access control for admin functionality:
+
+### Security Features
+- **Role-based Authentication**: Only users with `role: "admin"` can access admin routes
+- **Multiple Protection Layers**:
+  - Middleware-level route protection (`middleware.ts`)
+  - Component-level role checking in admin pages
+  - UI elements hidden for non-admin users
+- **JWT Token Validation**: Admin role verified in JWT tokens
+- **Automatic Redirects**: Non-admin users redirected to home page
+
+### Admin User Creation
+To create an admin user, use the API endpoint:
+```bash
+POST /api/admin/create
+```
+
+Default admin credentials (change after first login):
+- **Email**: `admin@hummusery.com`
+- **Password**: `admin123`
+- **Role**: `admin`
+
+### Access Behavior
+- **Regular Users**: Cannot see admin links in navigation
+- **Admin Users**: See admin panel link in both desktop and mobile navigation
+- **Unauthorized Access**: Automatic redirect with error message
+- **Route Protection**: `/admin/*` routes protected at middleware level

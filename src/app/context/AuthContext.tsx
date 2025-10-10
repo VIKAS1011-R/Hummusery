@@ -3,15 +3,15 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
-  user: { name: string; email: string } | null;
-  setUser: (user: { name: string; email: string } | null) => void;
+  user: { name: string; email: string; role: string } | null;
+  setUser: (user: { name: string; email: string; role: string } | null) => void;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<{ name: string; email: string } | null>(
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(
     null
   );
 

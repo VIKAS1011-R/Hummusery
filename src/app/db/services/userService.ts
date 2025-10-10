@@ -48,6 +48,7 @@ export class UserService {
       _id: createdUser._id.toString(),
       name: createdUser.name,
       email: createdUser.email,
+      role: createdUser.role,
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt,
     };
