@@ -9,7 +9,7 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    message: ""
+    message: "",
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -23,23 +23,23 @@ export default function ContactPage() {
       setLoading(false);
       setSubmitted(true);
       setFormData({ name: "", email: "", message: "" });
-      
+
       // Reset success message after 5 seconds
       setTimeout(() => setSubmitted(false), 5000);
     }, 1000);
   };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="pt-20 pb-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -47,7 +47,8 @@ export default function ContactPage() {
             Get In Touch
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            We&apos;d love to hear from you. Send us a message and we&apos;ll
+            respond as soon as possible.
           </p>
         </div>
       </section>
@@ -56,13 +57,15 @@ export default function ContactPage() {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            
             {/* Contact Information */}
             <div className="space-y-8">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-6">Contact Information</h2>
+                <h2 className="text-3xl font-bold text-white mb-6">
+                  Contact Information
+                </h2>
                 <p className="text-gray-400 text-lg mb-8">
-                  Visit us, call us, or send us a message. We're here to serve you the best Middle Eastern cuisine.
+                  Visit us, call us, or send us a message. We&apos;re here to
+                  serve you the best Middle Eastern cuisine.
                 </p>
               </div>
 
@@ -71,7 +74,9 @@ export default function ContactPage() {
                   <MapPin className="h-6 w-6 text-orange-500 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="text-white font-semibold mb-1">Location</h3>
-                    <p className="text-gray-400">123 Culinary Street, Food District</p>
+                    <p className="text-gray-400">
+                      123 Culinary Street, Food District
+                    </p>
                     <p className="text-gray-400">New York, NY 10001</p>
                   </div>
                 </div>
@@ -81,7 +86,9 @@ export default function ContactPage() {
                   <div>
                     <h3 className="text-white font-semibold mb-1">Phone</h3>
                     <p className="text-gray-400">+1 (555) 123-4567</p>
-                    <p className="text-gray-400 text-sm">Available during business hours</p>
+                    <p className="text-gray-400 text-sm">
+                      Available during business hours
+                    </p>
                   </div>
                 </div>
 
@@ -90,14 +97,18 @@ export default function ContactPage() {
                   <div>
                     <h3 className="text-white font-semibold mb-1">Email</h3>
                     <p className="text-gray-400">hello@hummusery.com</p>
-                    <p className="text-gray-400 text-sm">We'll respond within 24 hours</p>
+                    <p className="text-gray-400 text-sm">
+                      We&apos;ll respond within 24 hours
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4 p-4 bg-gray-800 rounded-lg">
                   <Clock className="h-6 w-6 text-orange-500 mt-1 flex-shrink-0" />
                   <div>
-                    <h3 className="text-white font-semibold mb-1">Business Hours</h3>
+                    <h3 className="text-white font-semibold mb-1">
+                      Business Hours
+                    </h3>
                     <div className="text-gray-400">
                       <p>Monday - Friday: 11:00 AM - 11:00 PM</p>
                       <p>Saturday - Sunday: 10:00 AM - 12:00 AM</p>
@@ -109,11 +120,13 @@ export default function ContactPage() {
 
             {/* Contact Form */}
             <div className="bg-gray-800 p-8 rounded-2xl">
-              <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
-              
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Send us a Message
+              </h2>
+
               {submitted && (
                 <div className="bg-green-500/10 border border-green-500 text-green-400 px-4 py-3 rounded-lg mb-6">
-                  Thank you for your message! We'll get back to you soon.
+                  Thank you for your message! We&apos;ll get back to you soon.
                 </div>
               )}
 
@@ -152,7 +165,9 @@ export default function ContactPage() {
                   </label>
                   <textarea
                     value={formData.message}
-                    onChange={(e) => handleInputChange("message", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("message", e.target.value)
+                    }
                     rows={6}
                     className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600 resize-none"
                     placeholder="Tell us how we can help you..."
