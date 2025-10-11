@@ -7,6 +7,7 @@ import { useToast } from "@/app/context/ToastContext";
 import OrderCard from "@/app/components/OrderCard";
 import { Loader2, Filter, Plus, UtensilsCrossed, ClipboardList } from "lucide-react";
 import AddMenuItemForm from "@/app/components/AddMenuItemForm";
+import EditMenuItemForm from "@/app/components/EditMenuItemForm";
 import MenuItemCard from "@/app/components/MenuItemCard";
 
 interface OrderItem {
@@ -51,6 +52,8 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">("all");
   const [activeTab, setActiveTab] = useState<"orders" | "menu">("orders");
   const [showAddMenuForm, setShowAddMenuForm] = useState(false);
+  const [showEditMenuForm, setShowEditMenuForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
 
@@ -138,6 +141,39 @@ export default function AdminPage() {
     setShowAddMenuForm(false);
     fetchMenuItems();
     setError(null);
+  };
+
+  const handleMenuItemUpdated = () => {
+    setShowEditMenuForm(false);
+    setEditingItem(null);
+    fetchMenuItems();
+    setError(null);
+  };
+
+  const handleEditMenuItem = (item: MenuItem) => {
+    setEditingItem(item);
+    setShowEditMenuForm(true);
+  };
+
+  const handleDeleteMenuItem = async (itemId: string) => {
+    if (!confirm("Are you sure you want to delete this menu item?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/menu/${itemId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete menu item");
+      }
+
+      addToast("Menu item deleted successfully!", "success");
+      fetchMenuItems();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete menu item");
+    }
   };
 
   const handleTabChange = (tab: "orders" | "menu") => {
@@ -382,16 +418,8 @@ export default function AdminPage() {
                   <MenuItemCard
                     key={item._id}
                     item={item}
-                    onEdit={(item) => {
-                      // TODO: Implement edit functionality
-                      console.log("Edit item:", item);
-                    }}
-                    onDelete={async (itemId) => {
-                      // TODO: Implement delete functionality
-                      if (confirm("Are you sure you want to delete this menu item?")) {
-                        console.log("Delete item:", itemId);
-                      }
-                    }}
+                    onEdit={handleEditMenuItem}
+                    onDelete={handleDeleteMenuItem}
                   />
                 ))}
               </div>
@@ -404,6 +432,18 @@ export default function AdminPage() {
           <AddMenuItemForm
             onSuccess={handleMenuItemAdded}
             onCancel={() => setShowAddMenuForm(false)}
+          />
+        )}
+
+        {/* Edit Menu Item Form Modal */}
+        {showEditMenuForm && editingItem && (
+          <EditMenuItemForm
+            item={editingItem}
+            onSuccess={handleMenuItemUpdated}
+            onCancel={() => {
+              setShowEditMenuForm(false);
+              setEditingItem(null);
+            }}
           />
         )}
       </div>

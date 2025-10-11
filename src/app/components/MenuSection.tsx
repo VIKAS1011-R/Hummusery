@@ -42,11 +42,15 @@ const MenuSection: React.FC = () => {
 
   // Get emoji based on category and veg status
   const getItemEmoji = (item: MenuItem) => {
-    if (item.category === "Appetizers") return item.isVeg ? "🥗" : "🍤";
-    if (item.category === "Main Course") return item.isVeg ? "🍛" : "🍖";
-    if (item.category === "Desserts") return "🍰";
-    if (item.category === "Beverages") return "🥤";
-    if (item.category === "Salads") return "🥗";
+    if (item.category === "Grab-and-Go Treats") return item.isVeg ? "🥪" : "🌭";
+    if (item.category === "Shawarma Combos") return "�";
+    if (item.category === "Indian Combos") return item.isVeg ? "🍛" : "🍖";
+    if (item.category === "The Grand Feast") return "🍽️";
+    if (item.category === "Rice And Noodles Bowls") return item.isVeg ? "🍜" : "🍲";
+    if (item.category === "Veg Rolls") return "🌯";
+    if (item.category === "Chicken Rolls") return "🌯";
+    if (item.category === "Chinese Veg Rolls") return "🥟";
+    if (item.category === "Chinese Chicken Rolls") return "🥟";
     return item.isVeg ? "🌱" : "🍖";
   };
 

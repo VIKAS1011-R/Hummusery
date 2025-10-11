@@ -7,7 +7,7 @@ interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
-  category?: string;
+  category: string;
   isAvailable: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -56,9 +56,7 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
           <span className="text-orange-400 font-bold text-lg">
             ₹{item.price.toLocaleString('en-IN')}
           </span>
-          {item.category && (
-            <p className="text-gray-400 text-sm">{item.category}</p>
-          )}
+          <p className="text-gray-400 text-sm">{item.category}</p>
         </div>
         
         {/* Action Buttons */}

@@ -45,15 +45,15 @@ const Navbar: React.FC = () => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            <a href="#home" className={linkClass("/#home")}>
+            <Link href="/" className={linkClass("/")}>
               Home
-            </a>
+            </Link>
             <Link href="/menu" className={linkClass("/menu")}>
               Menu
             </Link>
-            <a href="#contact" className={linkClass("/#contact")}>
+            <Link href="/contact" className={linkClass("/contact")}>
               Contact Us
-            </a>
+            </Link>
             {user && user.role === "admin" && (
               <Link href="/admin" className={linkClass("/admin")}>
                 Admin
@@ -90,13 +90,13 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="md:hidden bg-gray-900 border-t border-gray-800">
           <div className="px-4 py-4 space-y-2">
-            <a
-              href="#home"
+            <Link
+              href="/"
               onClick={closeMenu}
               className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg"
             >
               Home
-            </a>
+            </Link>
             <Link
               href="/menu"
               onClick={closeMenu}
@@ -104,13 +104,13 @@ const Navbar: React.FC = () => {
             >
               Menu
             </Link>
-            <a
-              href="#contact"
+            <Link
+              href="/contact"
               onClick={closeMenu}
               className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg"
             >
               Contact Us
-            </a>
+            </Link>
 
             {user ? (
               <div className="border-t border-gray-700 pt-2 mt-2">

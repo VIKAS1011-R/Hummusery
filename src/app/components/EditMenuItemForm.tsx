@@ -1,8 +1,21 @@
 import React, { useState } from "react";
-import { Plus, X, Leaf, Beef, Loader2 } from "lucide-react";
+import { Save, X, Leaf, Beef, Loader2 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 
-interface AddMenuItemFormProps {
+interface MenuItem {
+  _id: string;
+  name: string;
+  ingredients: string;
+  isVeg: boolean;
+  price: number;
+  category: string;
+  isAvailable: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface EditMenuItemFormProps {
+  item: MenuItem;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -28,15 +41,15 @@ const categories = [
   "Chinese Chicken Rolls"
 ];
 
-export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemFormProps) {
+export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenuItemFormProps) {
   const { addToast } = useToast();
   const [formData, setFormData] = useState<FormData>({
-    name: "",
-    ingredients: "",
-    isVeg: true,
-    price: "",
-    category: "Shawarma Combos",
-    isAvailable: true
+    name: item.name,
+    ingredients: item.ingredients,
+    isVeg: item.isVeg,
+    price: item.price.toString(),
+    category: item.category,
+    isAvailable: item.isAvailable
   });
   
   const [loading, setLoading] = useState(false);
@@ -66,8 +79,8 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
         throw new Error("Please enter a valid price greater than 0");
       }
 
-      const response = await fetch("/api/menu", {
-        method: "POST",
+      const response = await fetch(`/api/menu/${item._id}`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
@@ -84,23 +97,13 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create menu item");
+        throw new Error(data.error || "Failed to update menu item");
       }
 
-      // Reset form and call success callback
-      setFormData({
-        name: "",
-        ingredients: "",
-        isVeg: true,
-        price: "",
-        category: "Shawarma Combos",
-        isAvailable: true
-      });
-      
-      addToast(`Menu item "${formData.name}" added successfully!`, 'success');
+      addToast(`Menu item "${formData.name}" updated successfully!`, 'success');
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create menu item");
+      setError(err instanceof Error ? err.message : "Failed to update menu item");
     } finally {
       setLoading(false);
     }
@@ -117,7 +120,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Add New Menu Item</h2>
+          <h2 className="text-2xl font-bold text-white">Edit Menu Item</h2>
           <button
             onClick={onCancel}
             className="text-gray-400 hover:text-white transition-colors"
@@ -285,12 +288,12 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating...
+                  Updating...
                 </>
               ) : (
                 <>
-                  <Plus className="h-4 w-4" />
-                  Add Menu Item
+                  <Save className="h-4 w-4" />
+                  Update Menu Item
                 </>
               )}
             </button>

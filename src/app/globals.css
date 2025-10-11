@@ -32,3 +32,23 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Disable default smooth scrolling and hash scrolling */
+html {
+  scroll-behavior: auto;
+}
+
+/* Prevent default hash scrolling */
+:target {
+  scroll-margin-top: 0;
+}
+
+/* Remove any default scroll margins */
+section[id] {
+  scroll-margin-top: 0;
+}
+
+/* Ensure contact section has proper positioning */
+#contact {
+  scroll-margin-top: 0;
+}

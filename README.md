@@ -101,6 +101,7 @@ vercel
 │   │   ├── signup/               # Registration page
 │   │   ├── settings/             # User settings
 │   │   ├── menu/                 # Menu browsing page
+│   │   ├── contact/              # Contact page
 │   │   ├── globals.css           # Global styles
 │   │   ├── layout.tsx            # Root layout
 │   │   └── page.tsx              # Home page
@@ -155,7 +156,7 @@ The application features a comprehensive menu management system:
 - **Dynamic Menu Display**: Fetches menu items from MongoDB in real-time
 - **Advanced Filtering**: Filter by category, vegetarian/non-vegetarian, or search by name/ingredients
 - **Responsive Design**: Optimized for desktop and mobile viewing
-- **Category Organization**: Items grouped by categories (Appetizers, Main Course, Salads, etc.)
+- **Category Organization**: Items grouped by categories (Grab-and-Go Treats, Shawarma Combos, Indian Combos, etc.)
 - **Visual Indicators**: Clear veg/non-veg symbols and availability status
 - **Price Display**: Formatted in INR with proper localization
 
@@ -167,6 +168,8 @@ The application features a comprehensive menu management system:
 
 ### Admin Menu Management
 - **Add New Items**: Comprehensive form with validation
+- **Edit Items**: Full editing capability with pre-populated forms
+- **Delete Items**: Safe deletion with confirmation prompts
 - **Visual Management**: Card-based layout with edit/delete options
 - **Real-time Updates**: Instant reflection of changes
 - **Category Management**: Organized by food categories
@@ -200,4 +203,63 @@ Default admin credentials (change after first login):
 - **Regular Users**: Cannot see admin links in navigation
 - **Admin Users**: See admin panel link in both desktop and mobile navigation
 - **Unauthorized Access**: Automatic redirect with error message
-- **Route Protection**: `/admin/*` routes protected at middleware level
+- **Route Protection**: `/admin/*` routes protected at middleware level## Menu 
+Categories
+
+The application now uses specialized restaurant categories:
+
+### Available Categories
+1. **Grab-and-Go Treats** - Quick snacks and light bites
+2. **Shawarma Combos** - Traditional shawarma meals with sides
+3. **Indian Combos** - Indian-style combination meals
+4. **The Grand Feast** - Premium large portion meals
+5. **Rice And Noodles Bowls** - Rice and noodle-based dishes
+6. **Veg Rolls** - Vegetarian roll options
+7. **Chicken Rolls** - Chicken-based roll varieties
+8. **Chinese Veg Rolls** - Chinese-style vegetarian rolls
+9. **Chinese Chicken Rolls** - Chinese-style chicken rolls
+
+### Category Features
+- **Smart Emojis**: Each category has appropriate emoji representations
+- **Filtering**: Users can filter menu by category on the menu page
+- **Admin Management**: Categories available in admin panel for new items
+- **Responsive Display**: Categories organize menu items for better browsing##
+ Database Management
+
+### Menu Items Management
+- **Add Items**: Use admin panel or `POST /api/menu` endpoint
+- **Edit Items**: Full CRUD operations via admin interface
+- **Delete Items**: Individual item deletion with confirmation
+- **Clear All**: Use `DELETE /api/menu/clear` to remove all menu items
+- **Seed Data**: Use `POST /api/menu/seed` to populate with sample items
+
+### Data Flow
+1. **Fresh Start**: Database starts empty, no sample items
+2. **Admin Control**: All menu items managed through admin panel
+3. **Real-time Updates**: Changes immediately visible to users
+4. **Persistent Storage**: All data stored in MongoDB database## C
+ontact Page
+
+The application features a dedicated contact page for customer inquiries:
+
+### Contact Page Features (`/contact`)
+- **Professional Layout**: Clean, dedicated page for contact information
+- **Contact Information**: Complete business details including:
+  - Physical address with clear location
+  - Phone number with availability hours
+  - Email address with response time expectations
+  - Business hours for each day of the week
+- **Interactive Contact Form**: Full-featured form with:
+  - Name, email, and message fields
+  - Form validation and required field indicators
+  - Loading states during submission
+  - Success confirmation messages
+  - Professional styling with focus states
+- **Responsive Design**: Optimized for all device sizes
+- **SEO Optimized**: Proper metadata and page structure
+
+### Navigation
+- **Navbar Integration**: "Contact Us" link navigates to dedicated page
+- **No Scroll Issues**: Eliminates all hash navigation and scroll positioning problems
+- **Clean URLs**: Simple `/contact` route for easy sharing and bookmarking
+- **Consistent Experience**: Same navigation behavior across all pages

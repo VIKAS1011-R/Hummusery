@@ -24,7 +24,7 @@ export class MenuItemService {
       ingredients: itemData.ingredients.trim(),
       isVeg: itemData.isVeg,
       price: itemData.price,
-      category: itemData.category?.trim() || "Main Course",
+      category: itemData.category?.trim() || "Shawarma Combos",
       isAvailable: itemData.isAvailable !== undefined ? itemData.isAvailable : true,
       createdAt: new Date(),
       updatedAt: new Date(),

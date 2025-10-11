@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
@@ -6,8 +8,11 @@ import MenuSection from "../components/MenuSection";
 import ContactSection from "../components/ContactSection";
 import Footer from "../components/Footer";
 import DatabaseStatus from "../components/DatabaseStatus";
+import { useScrollToSection } from "../hooks/useScrollToSection";
 
 const RestaurantLanding: React.FC = () => {
+  // Initialize scroll behavior for hash navigation
+  useScrollToSection();
   return (
     <div className="bg-gray-900">
       <Navbar />
