@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Settings, LogOut } from 'lucide-react';
+import { ChevronDown, Settings, LogOut, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useRouter } from 'next/navigation';
@@ -30,6 +30,11 @@ const UserDropdown: React.FC = () => {
     router.push('/settings');
   };
 
+  const handleOrders = () => {
+    setIsOpen(false);
+    router.push('/orders');
+  };
+
   const handleLogout = async () => {
     setIsOpen(false);
     addToast('You have been logged out successfully', 'info');
@@ -54,6 +59,14 @@ const UserDropdown: React.FC = () => {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-1 z-50">
+          <button
+            onClick={handleOrders}
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+          >
+            <Package className="h-4 w-4 mr-3" />
+            Order History
+          </button>
+          
           <button
             onClick={handleSettings}
             className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"

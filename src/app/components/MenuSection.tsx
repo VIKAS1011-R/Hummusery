@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Leaf, Beef, Loader2 } from "lucide-react";
+import { Leaf, Beef, Loader2, Plus, Minus, ShoppingBag, Info } from "lucide-react";
 import Link from "next/link";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 interface MenuItem {
   _id: string;
@@ -15,6 +17,8 @@ interface MenuItem {
 }
 
 const MenuSection: React.FC = () => {
+  const { user } = useAuth();
+  const { items: cartItems, addToCart, updateCartItem, loading: cartLoading } = useCart();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,11 +58,41 @@ const MenuSection: React.FC = () => {
     return item.isVeg ? "🌱" : "🍖";
   };
 
+  // Helper function to get cart item quantity
+  const getCartItemQuantity = (menuItemId: string): number => {
+    const cartItem = cartItems.find(item => item.menuItemId === menuItemId);
+    return cartItem ? cartItem.quantity : 0;
+  };
+
+  // Handle buy now functionality
+  const handleBuyNow = async (menuItemId: string) => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    await addToCart(menuItemId, 1);
+    window.location.href = '/cart';
+  };
+
+  // Handle quantity update
+  const handleQuantityChange = async (menuItemId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      await updateCartItem(menuItemId, 0);
+    } else {
+      await updateCartItem(menuItemId, newQuantity);
+    }
+  };
+
   return (
     <section id="menu" className="py-20 bg-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-4">Our Signature Dishes</h2>
-        <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">Handcrafted with love and the finest ingredients</p>
+        <p className="text-center text-gray-400 mb-4 max-w-2xl mx-auto">Handcrafted with love and the finest ingredients</p>
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-12">
+          <span>✓ All prices include taxes</span>
+          <span>✓ Dine-in restaurant service</span>
+        </div>
         
         {loading ? (
           <div className="flex justify-center items-center py-12">
@@ -99,13 +133,74 @@ const MenuSection: React.FC = () => {
                     <p className="text-gray-400 text-sm mb-3 line-clamp-2">
                       {item.ingredients.split('\n')[0]}
                     </p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-2xl font-bold text-orange-500">
-                        ₹{item.price.toLocaleString('en-IN')}
-                      </span>
-                      <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm transition-colors" type="button">
-                        Order
-                      </button>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-2xl font-bold text-orange-500">
+                            ₹{item.price.toLocaleString('en-IN')}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <Info className="h-3 w-3 text-gray-400" />
+                            <span className="text-xs text-gray-400">Incl. of all taxes</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {user ? (
+                        <div className="space-y-2">
+                          {getCartItemQuantity(item._id) > 0 ? (
+                            /* Quantity Controls */
+                            <div className="flex items-center justify-between bg-gray-800 rounded-lg p-2">
+                              <button
+                                onClick={() => handleQuantityChange(item._id, getCartItemQuantity(item._id) - 1)}
+                                disabled={cartLoading}
+                                className="p-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
+                              >
+                                <Minus className="h-3 w-3" />
+                              </button>
+                              
+                              <span className="text-white text-sm font-medium">
+                                {getCartItemQuantity(item._id)} in cart
+                              </span>
+                              
+                              <button
+                                onClick={() => handleQuantityChange(item._id, getCartItemQuantity(item._id) + 1)}
+                                disabled={cartLoading}
+                                className="p-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            /* Add to Cart Button */
+                            <button 
+                              onClick={() => addToCart(item._id)}
+                              disabled={cartLoading}
+                              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add to Cart
+                            </button>
+                          )}
+                          
+                          {/* Buy Now Button */}
+                          <button 
+                            onClick={() => handleBuyNow(item._id)}
+                            disabled={cartLoading}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                          >
+                            <ShoppingBag className="h-3 w-3" />
+                            Buy Now
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => window.location.href = '/login'}
+                          className="w-full bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                        >
+                          Login to Order
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

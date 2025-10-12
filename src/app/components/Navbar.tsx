@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChefHat, Settings, LogOut, Shield } from "lucide-react";
+import { Menu, X, ChefHat, Settings, LogOut, Shield, ShoppingCart } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useCart } from "../context/CartContext";
 import UserDropdown from "./UserDropdown";
 
 const Navbar: React.FC = () => {
@@ -14,6 +15,8 @@ const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { addToast } = useToast();
+  const { itemCount } = useCart();
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -21,6 +24,23 @@ const Navbar: React.FC = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Handle click outside to close mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node) && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const closeMenu = () => setIsOpen(false);
 
@@ -31,6 +51,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav
+      ref={navRef}
       className={`fixed w-full top-0 left-0 z-50 transition-all duration-300 ${
         scrolled
           ? "bg-gray-900/95 backdrop-blur-sm shadow-lg"
@@ -61,6 +82,19 @@ const Navbar: React.FC = () => {
             )}
 
             <div className="flex items-center space-x-3">
+              {user && (
+                <Link href="/cart" className="relative">
+                  <button className="p-2 text-white hover:text-orange-500 transition-colors">
+                    <ShoppingCart className="h-6 w-6" />
+                    {itemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                        {itemCount > 99 ? '99+' : itemCount}
+                      </span>
+                    )}
+                  </button>
+                </Link>
+              )}
+              
               {user ? (
                 <UserDropdown />
               ) : (
@@ -76,14 +110,29 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-white z-50"
-            aria-label="Toggle menu"
-            type="button"
-          >
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="md:hidden flex items-center space-x-3">
+            {user && (
+              <Link href="/cart" className="relative">
+                <button className="p-2 text-white hover:text-orange-500 transition-colors">
+                  <ShoppingCart className="h-6 w-6" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                      {itemCount > 99 ? '99+' : itemCount}
+                    </span>
+                  )}
+                </button>
+              </Link>
+            )}
+            
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-white z-50"
+              aria-label="Toggle menu"
+              type="button"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
       </div>
 

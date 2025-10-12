@@ -1,5 +1,5 @@
 import { connectToDatabase } from "../connection";
-import { User, CreateUserData, UserResponse } from "../models/User";
+import { User, CreateUserData, UserResponse, OrderHistoryItem } from "../models/User";
 import bcrypt from "bcryptjs";
 
 const USERS_COLLECTION = "users";
@@ -27,6 +27,7 @@ export class UserService {
       email: userData.email.toLowerCase(),
       password: hashedPassword,
       role: userData.role || "user",
+      orderHistory: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -49,6 +50,7 @@ export class UserService {
       name: createdUser.name,
       email: createdUser.email,
       role: createdUser.role,
+      orderHistory: createdUser.orderHistory || [],
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt,
     };
@@ -66,5 +68,71 @@ export class UserService {
     hashedPassword: string
   ): Promise<boolean> {
     return await bcrypt.compare(plainPassword, hashedPassword);
+  }
+
+  static async addOrderToHistory(
+    userId: string,
+    orderData: {
+      orderId: string;
+      orderNumber: string;
+      items: {
+        name: string;
+        quantity: number;
+        price: number;
+        isVeg: boolean;
+      }[];
+      totalAmount: number;
+      status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
+    }
+  ): Promise<void> {
+    const db = await connectToDatabase();
+    const usersCollection = db.collection<User>(USERS_COLLECTION);
+
+    const orderHistoryItem = {
+      ...orderData,
+      orderDate: new Date(),
+    };
+
+    await usersCollection.updateOne(
+      { _id: userId },
+      {
+        $push: { orderHistory: orderHistoryItem },
+        $set: { updatedAt: new Date() }
+      }
+    );
+  }
+
+  static async getUserOrderHistory(userId: string): Promise<OrderHistoryItem[]> {
+    const db = await connectToDatabase();
+    const usersCollection = db.collection<User>(USERS_COLLECTION);
+
+    const user = await usersCollection.findOne(
+      { _id: userId },
+      { projection: { orderHistory: 1 } }
+    );
+
+    return user?.orderHistory || [];
+  }
+
+  static async updateOrderStatusInHistory(
+    userId: string,
+    orderId: string,
+    status: "pending" | "preparing" | "ready" | "completed" | "cancelled"
+  ): Promise<void> {
+    const db = await connectToDatabase();
+    const usersCollection = db.collection<User>(USERS_COLLECTION);
+
+    await usersCollection.updateOne(
+      { 
+        _id: userId,
+        "orderHistory.orderId": orderId
+      },
+      {
+        $set: { 
+          "orderHistory.$.status": status,
+          updatedAt: new Date()
+        }
+      }
+    );
   }
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Loader2, Filter, Leaf, Beef, Search } from "lucide-react";
+import { Loader2, Filter, Leaf, Beef, Search, Plus, Minus, ShoppingBag, Info } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import { useCart } from "@/app/context/CartContext";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface MenuItem {
   _id: string;
@@ -16,6 +18,8 @@ interface MenuItem {
 }
 
 export default function MenuPage() {
+  const { user } = useAuth();
+  const { items: cartItems, addToCart, updateCartItem, loading: cartLoading } = useCart();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +72,33 @@ export default function MenuPage() {
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
+  // Helper function to get cart item quantity
+  const getCartItemQuantity = (menuItemId: string): number => {
+    const cartItem = cartItems.find(item => item.menuItemId === menuItemId);
+    return cartItem ? cartItem.quantity : 0;
+  };
+
+  // Handle buy now functionality
+  const handleBuyNow = async (menuItemId: string) => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    // Add to cart first, then redirect to cart
+    await addToCart(menuItemId, 1);
+    window.location.href = '/cart';
+  };
+
+  // Handle quantity update
+  const handleQuantityChange = async (menuItemId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      await updateCartItem(menuItemId, 0);
+    } else {
+      await updateCartItem(menuItemId, newQuantity);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900">
@@ -89,9 +120,20 @@ export default function MenuPage() {
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
             Our Menu
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-300 mb-4 max-w-2xl mx-auto">
             Discover our authentic Middle Eastern cuisine crafted with the finest ingredients
           </p>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400">
+            <span className="flex items-center gap-1">
+              ✓ All prices include taxes
+            </span>
+            <span className="flex items-center gap-1">
+              ✓ Dine-in restaurant service
+            </span>
+            <span className="flex items-center gap-1">
+              ✓ No hidden charges
+            </span>
+          </div>
         </div>
       </section>
 
@@ -222,13 +264,80 @@ export default function MenuPage() {
 
                         {/* Item Footer */}
                         <div className="px-6 pb-6">
-                          <div className="flex justify-between items-center">
-                            <span className="text-2xl font-bold text-orange-400">
-                              ₹{item.price.toLocaleString('en-IN')}
-                            </span>
-                            <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium">
-                              Add to Cart
-                            </button>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex justify-between items-center">
+                              <div className="flex flex-col gap-1">
+                                <span className="text-2xl font-bold text-orange-400">
+                                  ₹{item.price.toLocaleString('en-IN')}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Info className="h-3 w-3 text-gray-400" />
+                                  <span className="text-xs text-gray-400">Incl. of all taxes</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {user ? (
+                              <div className="space-y-3">
+                                {getCartItemQuantity(item._id) > 0 ? (
+                                  /* Quantity Controls */
+                                  <div className="flex items-center justify-between bg-gray-700 rounded-lg p-2">
+                                    <button
+                                      onClick={() => handleQuantityChange(item._id, getCartItemQuantity(item._id) - 1)}
+                                      disabled={cartLoading}
+                                      className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50"
+                                    >
+                                      <Minus className="h-4 w-4" />
+                                    </button>
+                                    
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-white font-medium">
+                                        {getCartItemQuantity(item._id)} in cart
+                                      </span>
+                                    </div>
+                                    
+                                    <button
+                                      onClick={() => handleQuantityChange(item._id, getCartItemQuantity(item._id) + 1)}
+                                      disabled={cartLoading}
+                                      className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50"
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  /* Add to Cart Button */
+                                  <button 
+                                    onClick={() => addToCart(item._id)}
+                                    disabled={cartLoading}
+                                    className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                  >
+                                    {cartLoading ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Plus className="h-4 w-4" />
+                                    )}
+                                    Add to Cart
+                                  </button>
+                                )}
+                                
+                                {/* Buy Now Button */}
+                                <button 
+                                  onClick={() => handleBuyNow(item._id)}
+                                  disabled={cartLoading}
+                                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                  <ShoppingBag className="h-4 w-4" />
+                                  Buy Now
+                                </button>
+                              </div>
+                            ) : (
+                              <button 
+                                onClick={() => window.location.href = '/login'}
+                                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium"
+                              >
+                                Login to Order
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
