@@ -1,5 +1,5 @@
 import { connectToDatabase } from "../connection";
-import { ObjectId } from "mongodb";
+import { ObjectId, UpdateFilter } from "mongodb";
 
 export interface OrderItem {
   id: string;
@@ -38,6 +38,13 @@ export interface OrderHistory {
   originalOrderId: ObjectId;
 }
 
+interface UserDocument {
+  _id: ObjectId;
+  email: string;
+  name?: string;
+  orderHistory?: OrderHistory[];
+}
+
 export class OrderService {
   private static async getActiveOrdersCollection() {
     const db = await connectToDatabase();
@@ -46,17 +53,19 @@ export class OrderService {
 
   private static async getUsersCollection() {
     const db = await connectToDatabase();
-    return db.collection("users");
+    return db.collection<UserDocument>("users");
   }
 
   // Create a new order
-  static async createOrder(orderData: Omit<Order, "_id" | "createdAt" | "updatedAt">): Promise<Order> {
+  static async createOrder(
+    orderData: Omit<Order, "_id" | "createdAt" | "updatedAt">
+  ): Promise<Order> {
     const collection = await this.getActiveOrdersCollection();
-    
+
     const order: Order = {
       ...orderData,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     const result = await collection.insertOne(order);
@@ -73,22 +82,25 @@ export class OrderService {
   }
 
   // Update order status
-  static async updateOrderStatus(orderId: string, status: Order["status"]): Promise<boolean> {
+  static async updateOrderStatus(
+    orderId: string,
+    status: Order["status"]
+  ): Promise<boolean> {
     const collection = await this.getActiveOrdersCollection();
-    
+
     // Validate ObjectId format
     if (!ObjectId.isValid(orderId)) {
       console.error("Invalid ObjectId format:", orderId);
       return false;
     }
-    
+
     const result = await collection.updateOne(
       { _id: new ObjectId(orderId) },
-      { 
-        $set: { 
-          status, 
-          updatedAt: new Date() 
-        } 
+      {
+        $set: {
+          status,
+          updatedAt: new Date(),
+        },
       }
     );
 
@@ -106,7 +118,9 @@ export class OrderService {
     const usersCollection = await this.getUsersCollection();
 
     // Get the completed order
-    const order = await activeOrdersCollection.findOne({ _id: new ObjectId(orderId) });
+    const order = await activeOrdersCollection.findOne({
+      _id: new ObjectId(orderId),
+    });
     if (!order) return;
 
     // Create order history entry
@@ -117,21 +131,23 @@ export class OrderService {
         name: item.name,
         quantity: item.quantity,
         price: item.price,
-        isVeg: item.isVeg
+        isVeg: item.isVeg,
       })),
       totalAmount: order.totalAmount,
       completedAt: new Date(),
-      originalOrderId: order._id!
+      originalOrderId: order._id!,
     };
 
     // Add to user's order history
+    const updateFilter: UpdateFilter<UserDocument> = {
+      $push: {
+        orderHistory: orderHistory,
+      },
+    };
+
     await usersCollection.updateOne(
       { _id: new ObjectId(order.userId) },
-      { 
-        $push: { 
-          orderHistory: orderHistory as any
-        } 
-      } as any,
+      updateFilter,
       { upsert: true }
     );
 
@@ -142,7 +158,7 @@ export class OrderService {
   // Get user's order history
   static async getUserOrderHistory(userId: string): Promise<OrderHistory[]> {
     const usersCollection = await this.getUsersCollection();
-    
+
     const user = await usersCollection.findOne(
       { _id: new ObjectId(userId) },
       { projection: { orderHistory: 1 } }
@@ -154,13 +170,13 @@ export class OrderService {
   // Get order by ID
   static async getOrderById(orderId: string): Promise<Order | null> {
     const collection = await this.getActiveOrdersCollection();
-    
+
     // Validate ObjectId format
     if (!ObjectId.isValid(orderId)) {
       console.error("Invalid ObjectId format:", orderId);
       return null;
     }
-    
+
     return await collection.findOne({ _id: new ObjectId(orderId) });
   }
 
@@ -168,9 +184,9 @@ export class OrderService {
   static async getUserActiveOrders(userId: string): Promise<Order[]> {
     const collection = await this.getActiveOrdersCollection();
     return await collection
-      .find({ 
+      .find({
         userId,
-        status: { $ne: "completed" } 
+        status: { $ne: "completed" },
       })
       .sort({ createdAt: -1 })
       .toArray();
