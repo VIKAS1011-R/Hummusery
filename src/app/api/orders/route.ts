@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { OrderService } from "@/app/db/services/orderService";
 import jwt from "jsonwebtoken";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get all active orders (for admin dashboard)
     const orders = await OrderService.getActiveOrders();
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string };
       userId = decoded.userId;
     } catch (error) {
       return NextResponse.json(

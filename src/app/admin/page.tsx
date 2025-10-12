@@ -87,7 +87,7 @@ export default function AdminPage() {
       const data = await response.json();
       
       // Transform MongoDB orders to match expected format
-      const transformedOrders = (data.orders || []).map((order: any) => ({
+      const transformedOrders = (data.orders || []).map((order: { _id?: string; id?: string; createdAt?: string; [key: string]: unknown }) => ({
         ...order,
         id: order._id?.toString() || order.id, // Convert ObjectId to string
         createdAt: order.createdAt || new Date().toISOString()

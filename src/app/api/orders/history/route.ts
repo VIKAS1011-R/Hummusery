@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string };
       userId = decoded.userId;
     } catch (error) {
       return NextResponse.json(
