@@ -7,6 +7,7 @@ export async function createAdminUser() {
     const adminData = {
       name: "Admin User",
       email: "admin@hummusery.com",
+      phone: "9999999999", // Default admin phone number
       password: "admin123", // Change this to a secure password
       role: "admin"
     };
