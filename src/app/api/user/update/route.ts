@@ -74,7 +74,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update user
-    const updateData: any = {
+    const updateData: {
+      name: string;
+      email: string;
+      updatedAt: Date;
+      phone?: string;
+    } = {
       name,
       email: email.toLowerCase(),
       updatedAt: new Date()

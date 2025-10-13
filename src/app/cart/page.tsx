@@ -58,7 +58,7 @@ export default function CartPage() {
         name: "Hummusery",
         description: `Order #${orderData.orderNumber}`,
         order_id: razorpayOrder.order.id,
-        handler: async (response: any) => {
+        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
           try {
             // Verify payment with retry mechanism
             let verificationResult;

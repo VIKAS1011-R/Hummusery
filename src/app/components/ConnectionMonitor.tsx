@@ -4,8 +4,15 @@ import { useState, useEffect } from 'react';
 
 interface ConnectionStats {
   connected: boolean;
-  stats?: any;
-  poolInfo?: any;
+  stats?: {
+    connections?: {
+      current: number;
+    };
+  };
+  poolInfo?: {
+    minPoolSize: number;
+    maxPoolSize: number;
+  };
   lastHealthCheck?: string;
   connectionAge?: number;
   error?: string;

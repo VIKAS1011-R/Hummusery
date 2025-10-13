@@ -3,8 +3,29 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { OrderService } from "@/app/db/services/orderService";
 
+interface OrderData {
+  orderNumber: string;
+  items: Array<{
+    id: string;
+    name: string;
+    description: string;
+    isVeg: boolean;
+    quantity: number;
+    price: number;
+  }>;
+  status: "pending";
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  totalAmount: number;
+  userId: string;
+  paymentId?: string;
+  razorpayOrderId?: string;
+  paymentStatus?: "pending" | "completed" | "failed";
+}
+
 // Background retry function
-async function scheduleBackgroundRetry(orderData: any, paymentId: string, razorpayOrderId: string) {
+async function scheduleBackgroundRetry(orderData: OrderData, paymentId: string, razorpayOrderId: string) {
   // In a production environment, you would use a job queue like Bull, Agenda, or similar
   // For now, we'll do a simple background retry with setTimeout
   
@@ -104,7 +125,7 @@ export async function POST(request: NextRequest) {
       // Retry mechanism for database operations
       const maxRetries = 3;
       let retryCount = 0;
-      let lastError: any = null;
+      let lastError: Error | unknown = null;
 
       while (retryCount < maxRetries) {
         try {
