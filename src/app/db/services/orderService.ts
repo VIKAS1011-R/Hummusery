@@ -19,6 +19,9 @@ export interface Order {
   customerEmail: string;
   userId: string;
   totalAmount: number;
+  paymentId?: string;
+  razorpayOrderId?: string;
+  paymentStatus?: "pending" | "completed" | "failed";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,29 +50,88 @@ interface UserDocument {
 
 export class OrderService {
   private static async getActiveOrdersCollection() {
-    const db = await connectToDatabase();
-    return db.collection<Order>("activeOrders");
+    const maxRetries = 2;
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Attempting to connect to database (attempt ${attempt}/${maxRetries})`);
+        const db = await connectToDatabase();
+        return db.collection<Order>("activeOrders");
+      } catch (error) {
+        lastError = error;
+        console.error(`Database connection attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          const waitTime = attempt * 2000; // 2s, 4s
+          console.log(`Retrying in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+
+    console.error("All database connection attempts failed:", lastError);
+    throw new Error(`Database connection failed after ${maxRetries} attempts: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`);
   }
 
   private static async getUsersCollection() {
-    const db = await connectToDatabase();
-    return db.collection<UserDocument>("users");
+    const maxRetries = 2;
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Attempting to connect to users collection (attempt ${attempt}/${maxRetries})`);
+        const db = await connectToDatabase();
+        return db.collection<UserDocument>("users");
+      } catch (error) {
+        lastError = error;
+        console.error(`Users collection connection attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          const waitTime = attempt * 2000; // 2s, 4s
+          console.log(`Retrying in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+
+    console.error("All users collection connection attempts failed:", lastError);
+    throw new Error(`Users collection connection failed after ${maxRetries} attempts: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`);
   }
 
-  // Create a new order
+  // Create a new order with retry mechanism
   static async createOrder(
     orderData: Omit<Order, "_id" | "createdAt" | "updatedAt">
   ): Promise<Order> {
-    const collection = await this.getActiveOrdersCollection();
+    const maxRetries = 2;
+    let lastError: any;
 
-    const order: Order = {
-      ...orderData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const collection = await this.getActiveOrdersCollection();
+        
+        const order: Order = {
+          ...orderData,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
-    const result = await collection.insertOne(order);
-    return { ...order, _id: result.insertedId };
+        const result = await collection.insertOne(order);
+        return { ...order, _id: result.insertedId };
+      } catch (error) {
+        lastError = error;
+        console.error(`Order creation attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          // Wait before retry (exponential backoff)
+          const waitTime = Math.pow(2, attempt) * 1000;
+          console.log(`Retrying order creation in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+
+    throw lastError;
   }
 
   // Get all active orders (for admin)

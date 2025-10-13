@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChefHat, Settings, LogOut, Shield, ShoppingCart } from "lucide-react";
+import { Menu, X, ChefHat, Settings, LogOut, Shield, ShoppingCart, ClipboardList, UtensilsCrossed } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useCart } from "../context/CartContext";
@@ -75,6 +75,11 @@ const Navbar: React.FC = () => {
             <Link href="/contact" className={linkClass("/contact")}>
               Contact Us
             </Link>
+            {user && (
+              <Link href="/orders" className={linkClass("/orders")}>
+                Orders
+              </Link>
+            )}
             {user && user.role === "admin" && (
               <Link href="/admin" className={linkClass("/admin")}>
                 Admin
@@ -111,6 +116,16 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="md:hidden flex items-center space-x-3">
+            {/* Menu Button - Always visible for quick access */}
+            <Link href="/menu">
+              <button 
+                className="p-2 text-white hover:text-orange-500 transition-colors"
+                aria-label="View Menu"
+              >
+                <UtensilsCrossed className="h-6 w-6" />
+              </button>
+            </Link>
+
             {user && (
               <Link href="/cart" className="relative">
                 <button className="p-2 text-white hover:text-orange-500 transition-colors">
@@ -164,6 +179,15 @@ const Navbar: React.FC = () => {
             {user ? (
               <div className="border-t border-gray-700 pt-2 mt-2">
                 <div className="px-4 py-2 text-orange-500 font-medium">{user.name}</div>
+                <Link href="/orders" className="block">
+                  <button
+                    onClick={closeMenu}
+                    className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                  >
+                    <ClipboardList className="h-4 w-4 mr-3" />
+                    Order History
+                  </button>
+                </Link>
                 {user.role === "admin" && (
                   <Link href="/admin" className="block">
                     <button
@@ -175,17 +199,15 @@ const Navbar: React.FC = () => {
                     </button>
                   </Link>
                 )}
-                <button
-                  onClick={() => {
-                    closeMenu();
-                    // Navigate to settings - you can implement this route
-                    window.location.href = '/settings';
-                  }}
-                  className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
-                >
-                  <Settings className="h-4 w-4 mr-3" />
-                  Settings
-                </button>
+                <Link href="/settings" className="block">
+                  <button
+                    onClick={closeMenu}
+                    className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                  >
+                    <Settings className="h-4 w-4 mr-3" />
+                    Settings
+                  </button>
+                </Link>
                 <button
                   onClick={async () => {
                     closeMenu();

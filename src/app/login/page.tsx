@@ -8,7 +8,7 @@ import { useToast } from "../context/ToastContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { user, setUser, loading: authLoading } = useAuth();
   const { addToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,18 +18,20 @@ export default function LoginPage() {
 
   // Redirect if user is already logged in
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
-  // Don't render the form if user is logged in
-  if (user) {
+  // Don't render the form if auth is loading or user is logged in
+  if (authLoading || user) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Redirecting...</p>
+          <p className="text-gray-400">
+            {authLoading ? "Checking authentication..." : "Redirecting..."}
+          </p>
         </div>
       </div>
     );

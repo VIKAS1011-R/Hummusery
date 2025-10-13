@@ -43,7 +43,7 @@ interface MenuItem {
 }
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { addToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -58,6 +58,11 @@ export default function AdminPage() {
   const [menuLoading, setMenuLoading] = useState(false);
 
   useEffect(() => {
+    // Don't do anything while auth is loading
+    if (authLoading) {
+      return;
+    }
+
     // Check if user is authenticated
     if (!user) {
       router.push("/login");
@@ -75,7 +80,7 @@ export default function AdminPage() {
     if (activeTab === "menu") {
       fetchMenuItems();
     }
-  }, [user, router, activeTab, addToast]);
+  }, [user, authLoading, router, activeTab, addToast]);
 
   const fetchOrders = async () => {
     try {
@@ -206,10 +211,16 @@ export default function AdminPage() {
     completed: orders.filter(order => order.status === "completed").length,
   };
 
-  if (loading) {
+  // Show loading while auth is being checked or data is being fetched
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-4" />
+          <p className="text-gray-400">
+            {authLoading ? "Checking authentication..." : "Loading admin dashboard..."}
+          </p>
+        </div>
       </div>
     );
   }

@@ -1,88 +1,239 @@
 "use client";
 
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Mail, Shield } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { User, Phone, Mail, Shield, Save, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import Navbar from "@/app/components/Navbar";
+import Footer from "@/app/components/Footer";
+import { useAuth } from "@/app/context/AuthContext";
+import { useToast } from "@/app/context/ToastContext";
 
 export default function SettingsPage() {
-  const { user } = useAuth();
-  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { addToast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Phone validation
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (formData.phone && !phoneRegex.test(formData.phone)) {
+        addToast("Please enter a valid 10-digit phone number", "error");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch("/api/user/update", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        addToast("Profile updated successfully!", "success");
+      } else {
+        throw new Error(data.error || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      addToast("Failed to update profile. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <Navbar />
+        <div className="pt-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
-    router.push('/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <Navbar />
+        <div className="pt-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white mb-4">Please Log In</h1>
+            <p className="text-gray-400 mb-6">You need to be logged in to access settings.</p>
+            <Link
+              href="/login"
+              className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              Log In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 pt-20">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center mb-8">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-gray-400 hover:text-white transition-colors duration-200 mr-4"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back
-          </button>
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
-        </div>
-
-        {/* User Profile Section */}
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-            <User className="h-5 w-5 mr-2" />
-            Profile Information
-          </h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Full Name
-              </label>
-              <div className="bg-gray-700 text-white px-4 py-3 rounded-lg">
-                {user.name}
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email Address
-              </label>
-              <div className="bg-gray-700 text-white px-4 py-3 rounded-lg flex items-center">
-                <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                {user.email}
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-900">
+      <Navbar />
+      
+      {/* Header */}
+      <section className="pt-20 pb-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+              <ArrowLeft className="h-6 w-6" />
+            </Link>
+            <h1 className="text-4xl font-bold text-white">Account Settings</h1>
           </div>
-        </div>
-
-        {/* Account Security Section */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-            <Shield className="h-5 w-5 mr-2" />
-            Account Security
-          </h2>
-          
-          <div className="space-y-4">
-            <button className="w-full text-left bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors duration-200">
-              Change Password
-            </button>
-            
-            <button className="w-full text-left bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors duration-200">
-              Two-Factor Authentication
-            </button>
-          </div>
-        </div>
-
-        {/* Coming Soon Notice */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-400 text-sm">
-            More settings options coming soon...
+          <p className="text-gray-300">
+            Manage your account information and preferences
           </p>
         </div>
-      </div>
+      </section>
+
+      {/* Settings Content */}
+      <section className="py-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-white mb-6">Profile Information</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Name Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <User className="h-4 w-4 inline mr-2" />
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+
+              {/* Email Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <Mail className="h-4 w-4 inline mr-2" />
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+
+              {/* Phone Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <Phone className="h-4 w-4 inline mr-2" />
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                  className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600"
+                  placeholder="Enter 10-digit mobile number"
+                  maxLength={10}
+                />
+                <p className="text-xs text-gray-400 mt-1">Required for payment processing</p>
+              </div>
+
+              {/* Role Display */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <Shield className="h-4 w-4 inline mr-2" />
+                  Account Type
+                </label>
+                <div className="w-full bg-gray-600 text-gray-300 px-4 py-3 rounded-lg border border-gray-500">
+                  {user.role === "admin" ? "Administrator" : "Customer"}
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Account Info */}
+          <div className="bg-gray-800 rounded-lg p-6 mt-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Account Information</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Member since:</span>
+                <span className="text-white">
+                  {new Date().toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Account Status:</span>
+                <span className="text-green-400">Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRazorpay } from "@/app/hooks/useRazorpay";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Leaf, Beef, Store } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
@@ -12,9 +13,15 @@ export default function CartPage() {
   const { user } = useAuth();
   const { items, totalAmount, itemCount, loading, updateCartItem, removeFromCart, clearCart } = useCart();
   const [placingOrder, setPlacingOrder] = useState(false);
+  const { isLoaded: razorpayLoaded, createOrder, openCheckout, verifyPayment } = useRazorpay();
 
   const handlePlaceOrder = async () => {
     if (!user || items.length === 0) return;
+
+    if (!razorpayLoaded) {
+      alert("Payment system is loading. Please try again in a moment.");
+      return;
+    }
 
     try {
       setPlacingOrder(true);
@@ -36,40 +43,83 @@ export default function CartPage() {
         status: "pending" as const,
         customerName: user.name || user.email,
         customerEmail: user.email,
-        totalAmount: totalAmount,
-        createdAt: new Date().toISOString()
+        totalAmount: totalAmount
       };
 
-      // Send order to API
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Create Razorpay order
+      const razorpayOrder = await createOrder(totalAmount, orderData);
+
+      // Open Razorpay checkout
+      openCheckout({
+        key: razorpayOrder.key_id,
+        amount: razorpayOrder.order.amount,
+        currency: razorpayOrder.order.currency,
+        name: "Hummusery",
+        description: `Order #${orderData.orderNumber}`,
+        order_id: razorpayOrder.order.id,
+        handler: async (response: any) => {
+          try {
+            // Verify payment with retry mechanism
+            let verificationResult;
+            let retryCount = 0;
+            const maxRetries = 2;
+
+            while (retryCount <= maxRetries) {
+              try {
+                verificationResult = await verifyPayment(response, orderData);
+                break; // Success, exit retry loop
+              } catch (error) {
+                retryCount++;
+                console.error(`Payment verification attempt ${retryCount} failed:`, error);
+                
+                if (retryCount <= maxRetries) {
+                  console.log(`Retrying payment verification... (${retryCount}/${maxRetries})`);
+                  // Wait 2 seconds before retry
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                } else {
+                  throw error; // All retries failed
+                }
+              }
+            }
+            
+            if (verificationResult?.success) {
+              // Clear cart after successful payment
+              clearCart();
+              
+              // Show appropriate success message
+              if (verificationResult.warning) {
+                alert(`Payment successful! Your order number is: ${orderData.orderNumber}\n\nNote: ${verificationResult.warning}`);
+              } else {
+                alert(`Payment successful! Your order number is: ${orderData.orderNumber}`);
+              }
+              
+              window.location.href = "/orders";
+            } else {
+              throw new Error("Payment verification failed");
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            alert(`Payment completed but there was an issue processing your order.\n\nYour payment ID: ${response.razorpay_payment_id}\nOrder Number: ${orderData.orderNumber}\n\nPlease contact support with these details.`);
+          }
         },
-        credentials: "include", // Include cookies for authentication
-        body: JSON.stringify(orderData),
+        prefill: {
+          name: user.name || "",
+          email: user.email || "",
+          contact: user.phone || "",
+        },
+        theme: {
+          color: "#f97316" // Orange color matching your theme
+        },
+        modal: {
+          ondismiss: () => {
+            setPlacingOrder(false);
+          }
+        }
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to place order");
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        // Clear cart after successful order
-        clearCart();
-        
-        // Show success message and redirect
-        alert(`Order placed successfully! Your order number is: ${orderData.orderNumber}`);
-        window.location.href = "/orders";
-      } else {
-        throw new Error(result.error || "Failed to place order");
-      }
     } catch (error) {
-      console.error("Error placing order:", error);
-      alert("Failed to place order. Please try again.");
-    } finally {
+      console.error("Error initiating payment:", error);
+      alert("Failed to initiate payment. Please try again.");
       setPlacingOrder(false);
     }
   };

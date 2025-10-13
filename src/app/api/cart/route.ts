@@ -34,6 +34,21 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching cart:", error);
+    
+    // Return empty cart as fallback for database connection issues
+    if (error instanceof Error && error.message.includes('Database connection failed')) {
+      console.warn("Database unavailable, returning empty cart");
+      return NextResponse.json({
+        success: true,
+        cart: {
+          items: [],
+          totalAmount: 0,
+          itemCount: 0
+        },
+        warning: "Database temporarily unavailable"
+      });
+    }
+    
     return NextResponse.json(
       { 
         success: false, 

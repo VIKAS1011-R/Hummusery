@@ -60,32 +60,43 @@ const statusConfig = {
 };
 
 export default function OrderHistoryPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [orderHistory, setOrderHistory] = useState<OrderHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) {
+      return; // Wait for auth to complete
+    }
+    
     if (user) {
       fetchOrderHistory();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchOrderHistory = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/orders/history");
+      const response = await fetch("/api/orders/history", {
+        credentials: "include" // Ensure cookies are sent
+      });
       if (response.ok) {
         const data = await response.json();
+        console.log("Order history data:", data); // Debug log
         if (data.success) {
           setOrderHistory(data.orderHistory);
+        } else {
+          setError(data.error || "Failed to fetch order history");
         }
       } else {
-        setError("Failed to fetch order history");
+        console.error("Order history fetch failed:", response.status, response.statusText);
+        setError(`Failed to fetch order history (${response.status})`);
       }
     } catch (err) {
+      console.error("Order history fetch error:", err);
       setError("Failed to fetch order history");
     } finally {
       setLoading(false);
@@ -101,6 +112,21 @@ export default function OrderHistoryPage() {
       minute: '2-digit'
     });
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <Navbar />
+        <div className="pt-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -146,8 +172,8 @@ export default function OrderHistoryPage() {
       </section>
 
       {/* Order History Content */}
-      <section className="py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-4 sm:py-8">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
           {loading ? (
             <div className="text-center py-16">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4 animate-pulse" />
@@ -180,17 +206,17 @@ export default function OrderHistoryPage() {
                 return (
                   <div
                     key={order.orderId}
-                    className={`bg-gray-800 rounded-lg border ${currentStatus.borderColor} p-6`}
+                    className={`bg-gray-800 rounded-lg border ${currentStatus.borderColor} p-4 sm:p-6`}
                   >
                     {/* Order Header */}
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                      <div className="flex-1">
                         <h3 className="text-lg font-semibold text-white">
                           Order #{order.orderNumber}
                         </h3>
                         <p className="text-sm text-gray-400">{formatDate(order.orderDate)}</p>
                       </div>
-                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${currentStatus.bgColor}`}>
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${currentStatus.bgColor} self-start`}>
                         <StatusIcon className={`h-4 w-4 ${currentStatus.color}`} />
                         <span className={`text-sm font-medium ${currentStatus.color}`}>
                           {currentStatus.label}
@@ -202,25 +228,25 @@ export default function OrderHistoryPage() {
                     <div className="space-y-3 mb-4">
                       <h4 className="text-sm font-medium text-gray-300">Items:</h4>
                       {order.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
-                          <div className="flex items-center gap-3">
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-gray-700/50 rounded-lg">
+                          <div className="flex items-center gap-3 flex-1">
                             {item.isVeg ? (
-                              <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded border border-green-400">
+                              <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded border border-green-400 flex-shrink-0">
                                 <Leaf className="h-3 w-3 text-white" />
                               </div>
                             ) : (
-                              <div className="flex items-center justify-center w-5 h-5 bg-red-500 rounded border border-red-400">
+                              <div className="flex items-center justify-center w-5 h-5 bg-red-500 rounded border border-red-400 flex-shrink-0">
                                 <Beef className="h-3 w-3 text-white" />
                               </div>
                             )}
-                            <div>
-                              <p className="text-white font-medium">{item.name}</p>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium truncate">{item.name}</p>
                               <p className="text-sm text-gray-400">₹{item.price.toLocaleString('en-IN')} each</p>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="flex justify-between sm:block sm:text-right">
                             <p className="text-white font-medium">×{item.quantity}</p>
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-gray-400 sm:mt-1">
                               ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                             </p>
                           </div>

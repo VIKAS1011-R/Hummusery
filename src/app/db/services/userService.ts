@@ -25,6 +25,7 @@ export class UserService {
     const newUser: Omit<User, "_id"> = {
       name: userData.name,
       email: userData.email.toLowerCase(),
+      phone: userData.phone,
       password: hashedPassword,
       role: userData.role || "user",
       orderHistory: [],
@@ -49,6 +50,7 @@ export class UserService {
       _id: createdUser._id.toString(),
       name: createdUser.name,
       email: createdUser.email,
+      phone: createdUser.phone,
       role: createdUser.role,
       orderHistory: createdUser.orderHistory || [],
       createdAt: createdUser.createdAt,

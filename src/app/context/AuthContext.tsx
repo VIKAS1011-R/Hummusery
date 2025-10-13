@@ -3,17 +3,19 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
-  user: { name: string; email: string; role: string } | null;
-  setUser: (user: { name: string; email: string; role: string } | null) => void;
+  user: { name: string; email: string; phone?: string; role: string } | null;
+  setUser: (user: { name: string; email: string; phone?: string; role: string } | null) => void;
   logout: () => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(
+  const [user, setUser] = useState<{ name: string; email: string; phone?: string; role: string } | null>(
     null
   );
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check authentication status on mount
@@ -22,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
+      setLoading(true);
       const response = await fetch("/api/auth/check");
       if (response.ok) {
         const data = await response.json();
@@ -34,6 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Auth check failed:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

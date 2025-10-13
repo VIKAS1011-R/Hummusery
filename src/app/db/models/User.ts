@@ -16,6 +16,7 @@ export interface User {
   _id?: string;
   name: string;
   email: string;
+  phone: string;
   password: string;
   role: string;
   orderHistory: OrderHistoryItem[];
@@ -26,6 +27,7 @@ export interface User {
 export interface CreateUserData {
   name: string;
   email: string;
+  phone: string;
   password: string;
   role?: string;
 }
@@ -34,6 +36,7 @@ export interface UserResponse {
   _id: string;
   name: string;
   email: string;
+  phone: string;
   role: string;
   orderHistory: OrderHistoryItem[];
   createdAt: Date;

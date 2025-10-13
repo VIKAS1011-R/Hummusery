@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
 import ToastContainer from './components/ToastContainer';
+import DatabaseWarmup from './components/DatabaseWarmup';
+import ConnectionMonitor from './components/ConnectionMonitor';
 
 export const metadata = {
   title: "Hummusery",
@@ -18,8 +20,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ToastProvider>
           <AuthProvider>
             <CartProvider>
+              <DatabaseWarmup />
               {children}
               <ToastContainer />
+              <ConnectionMonitor />
             </CartProvider>
           </AuthProvider>
         </ToastProvider>

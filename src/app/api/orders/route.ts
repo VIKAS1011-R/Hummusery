@@ -13,6 +13,17 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
+    
+    // Return empty orders array as fallback instead of error
+    if (error instanceof Error && error.message.includes('Database connection failed')) {
+      console.warn("Database unavailable, returning empty orders list");
+      return NextResponse.json({
+        success: true,
+        orders: [],
+        warning: "Database temporarily unavailable"
+      });
+    }
+    
     return NextResponse.json(
       { success: false, error: "Failed to fetch orders" },
       { status: 500 }

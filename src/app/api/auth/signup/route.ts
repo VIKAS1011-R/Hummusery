@@ -9,12 +9,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, password }: CreateUserData = body;
+    const { name, email, phone, password } = body;
 
     // Validate input
-    if (!name || !email || !password) {
+    if (!name || !email || !phone || !password) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "Name, email, phone, and password are required" },
         { status: 400 }
       );
     }
@@ -35,8 +35,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Phone validation
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit phone number" },
+        { status: 400 }
+      );
+    }
+
     // Create user
-    const user = await UserService.createUser({ name, email, password });
+    const user = await UserService.createUser({ name, email, phone, password });
 
     // Generate JWT token for automatic login
     const token = sign(
