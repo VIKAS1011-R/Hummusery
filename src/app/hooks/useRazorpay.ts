@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'react';
 
+interface RazorpayInstance {
+  open(): void;
+}
+
+interface RazorpayConstructor {
+  new (options: RazorpayOptions): RazorpayInstance;
+}
+
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: RazorpayConstructor;
   }
+}
+
+interface RazorpayPaymentResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
 }
 
 interface RazorpayOptions {
@@ -13,7 +27,7 @@ interface RazorpayOptions {
   name: string;
   description: string;
   order_id: string;
-  handler: (response: any) => void;
+  handler: (response: RazorpayPaymentResponse) => void;
   prefill?: {
     name?: string;
     email?: string;
@@ -25,6 +39,25 @@ interface RazorpayOptions {
   modal?: {
     ondismiss?: () => void;
   };
+}
+
+interface OrderData {
+  items: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  totalAmount: number;
+}
+
+interface PaymentData {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
 }
 
 export const useRazorpay = () => {
@@ -58,7 +91,7 @@ export const useRazorpay = () => {
     };
   }, []);
 
-  const createOrder = async (amount: number, orderData: any) => {
+  const createOrder = async (amount: number, orderData: OrderData) => {
     try {
       setIsLoading(true);
       const response = await fetch('/api/payment/create-order', {
@@ -101,7 +134,7 @@ export const useRazorpay = () => {
     razorpay.open();
   };
 
-  const verifyPayment = async (paymentData: any, orderData: any) => {
+  const verifyPayment = async (paymentData: PaymentData, orderData: OrderData) => {
     try {
       const response = await fetch('/api/payment/verify', {
         method: 'POST',

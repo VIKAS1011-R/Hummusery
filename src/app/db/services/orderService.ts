@@ -51,7 +51,7 @@ interface UserDocument {
 export class OrderService {
   private static async getActiveOrdersCollection() {
     const maxRetries = 2;
-    let lastError: any;
+    let lastError: Error | unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -76,7 +76,7 @@ export class OrderService {
 
   private static async getUsersCollection() {
     const maxRetries = 2;
-    let lastError: any;
+    let lastError: Error | unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -104,7 +104,7 @@ export class OrderService {
     orderData: Omit<Order, "_id" | "createdAt" | "updatedAt">
   ): Promise<Order> {
     const maxRetries = 2;
-    let lastError: any;
+    let lastError: Error | unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {

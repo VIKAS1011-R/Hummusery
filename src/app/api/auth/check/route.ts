@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       userId: string; 
       email: string; 
       name: string; 
+      phone: string;
       role: string; 
     };
     
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
         id: decoded.userId,
         email: decoded.email,
         name: decoded.name,
+        phone: decoded.phone,
         role: decoded.role
       }
     });

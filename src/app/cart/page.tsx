@@ -43,6 +43,7 @@ export default function CartPage() {
         status: "pending" as const,
         customerName: user.name || user.email,
         customerEmail: user.email,
+        customerPhone: user.phone,
         totalAmount: totalAmount
       };
 
@@ -105,7 +106,7 @@ export default function CartPage() {
         prefill: {
           name: user.name || "",
           email: user.email || "",
-          contact: user.phone || "",
+          contact: user.phone,
         },
         theme: {
           color: "#f97316" // Orange color matching your theme
