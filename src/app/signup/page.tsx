@@ -88,6 +88,7 @@ export default function SignupPage() {
         setUser({
           name: data.user.name,
           email: data.user.email,
+          phone: data.user.phone,
           role: data.user.role,
         });
         
