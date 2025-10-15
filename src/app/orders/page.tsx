@@ -6,6 +6,8 @@ import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import { useAuth } from "@/app/context/AuthContext";
+import { useMongoRealTimeOrderHistory } from "@/app/hooks/useMongoRealTimeOrderHistory";
+import RealTimeStatus from "@/app/components/RealTimeStatus";
 
 interface OrderHistoryItem {
   orderId: string;
@@ -61,9 +63,15 @@ const statusConfig = {
 
 export default function OrderHistoryPage() {
   const { user, loading: authLoading } = useAuth();
-  const [orderHistory, setOrderHistory] = useState<OrderHistoryItem[]>([]);
+  const [initialOrderHistory, setInitialOrderHistory] = useState<OrderHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use MongoDB real-time order history hook
+  const { orderHistory, isConnected, error: realtimeError, refreshConnection } = useMongoRealTimeOrderHistory(
+    initialOrderHistory, 
+    user?.id
+  );
 
   useEffect(() => {
     if (authLoading) {
@@ -87,7 +95,7 @@ export default function OrderHistoryPage() {
         const data = await response.json();
         console.log("Order history data:", data); // Debug log
         if (data.success) {
-          setOrderHistory(data.orderHistory);
+          setInitialOrderHistory(data.orderHistory);
         } else {
           setError(data.error || "Failed to fetch order history");
         }
@@ -174,15 +182,37 @@ export default function OrderHistoryPage() {
       {/* Order History Content */}
       <section className="py-4 sm:py-8">
         <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
+          {/* Real-time Connection Status */}
+          {user && (
+            <div className="mb-6">
+              <RealTimeStatus 
+                isConnected={isConnected}
+                error={realtimeError}
+                onRetry={refreshConnection}
+                className=""
+              />
+              {isConnected && (
+                <p className="text-xs text-green-400 mt-1">Real-time updates active</p>
+              )}
+            </div>
+          )}
           {loading ? (
             <div className="text-center py-16">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4 animate-pulse" />
               <p className="text-gray-400">Loading your order history...</p>
             </div>
-          ) : error ? (
+          ) : (error || realtimeError) ? (
             <div className="text-center py-16">
               <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-4">
-                {error}
+                {error || realtimeError}
+                {realtimeError && (
+                  <button
+                    onClick={refreshConnection}
+                    className="ml-4 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                  >
+                    Retry Connection
+                  </button>
+                )}
               </div>
             </div>
           ) : orderHistory.length === 0 ? (

@@ -72,6 +72,9 @@ export async function POST(request: NextRequest) {
 
     const newOrder = await OrderService.createOrder(orderData);
     
+    console.log("New order created:", newOrder.orderNumber);
+    // MongoDB Change Streams will automatically detect this insertion
+    
     return NextResponse.json({
       success: true,
       order: newOrder

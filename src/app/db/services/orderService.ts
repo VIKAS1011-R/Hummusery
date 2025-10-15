@@ -14,7 +14,7 @@ export interface Order {
   _id?: ObjectId;
   orderNumber: string;
   items: OrderItem[];
-  status: "pending" | "preparing" | "ready" | "completed";
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
   customerName: string;
   customerEmail: string;
   userId: string;

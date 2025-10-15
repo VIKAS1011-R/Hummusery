@@ -134,6 +134,8 @@ export async function POST(request: NextRequest) {
           const newOrder = await OrderService.createOrder(orderToCreate);
           
           console.log("Order created successfully in database:", newOrder._id);
+          // MongoDB Change Streams will automatically detect this insertion
+          
           return NextResponse.json({
             success: true,
             message: "Payment verified and order created successfully",

@@ -5,10 +5,18 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/app/context/ToastContext";
 import OrderCard from "@/app/components/OrderCard";
-import { Loader2, Filter, Plus, UtensilsCrossed, ClipboardList } from "lucide-react";
+import {
+  Loader2,
+  Filter,
+  Plus,
+  UtensilsCrossed,
+  ClipboardList,
+} from "lucide-react";
 import AddMenuItemForm from "@/app/components/AddMenuItemForm";
 import EditMenuItemForm from "@/app/components/EditMenuItemForm";
 import MenuItemCard from "@/app/components/MenuItemCard";
+import { useMongoRealTimeOrders } from "@/app/hooks/useMongoRealTimeOrders";
+import RealTimeStatus from "@/app/components/RealTimeStatus";
 
 interface OrderItem {
   id: string;
@@ -23,7 +31,7 @@ interface Order {
   id: string;
   orderNumber: string;
   items: OrderItem[];
-  status: "pending" | "preparing" | "ready" | "completed";
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
   customerName: string;
   customerEmail: string;
   totalAmount: number;
@@ -46,10 +54,20 @@ export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { addToast } = useToast();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [initialOrders, setInitialOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">("all");
+
+  // Use MongoDB real-time orders hook
+  const {
+    orders,
+    isConnected,
+    error: realtimeError,
+    refreshConnection,
+  } = useMongoRealTimeOrders(initialOrders);
+  const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">(
+    "all"
+  );
   const [activeTab, setActiveTab] = useState<"orders" | "menu">("orders");
   const [showAddMenuForm, setShowAddMenuForm] = useState(false);
   const [showEditMenuForm, setShowEditMenuForm] = useState(false);
@@ -76,6 +94,7 @@ export default function AdminPage() {
       return;
     }
 
+    // Fetch initial data
     fetchOrders();
     if (activeTab === "menu") {
       fetchMenuItems();
@@ -90,15 +109,22 @@ export default function AdminPage() {
         throw new Error("Failed to fetch orders");
       }
       const data = await response.json();
-      
+
       // Transform MongoDB orders to match expected format
-      const transformedOrders = (data.orders || []).map((order: { _id?: string; id?: string; createdAt?: string; [key: string]: unknown }) => ({
-        ...order,
-        id: order._id?.toString() || order.id, // Convert ObjectId to string
-        createdAt: order.createdAt || new Date().toISOString()
-      }));
-      
-      setOrders(transformedOrders);
+      const transformedOrders = (data.orders || []).map(
+        (order: {
+          _id?: string;
+          id?: string;
+          createdAt?: string;
+          [key: string]: unknown;
+        }) => ({
+          ...order,
+          id: order._id?.toString() || order.id, // Convert ObjectId to string
+          createdAt: order.createdAt || new Date().toISOString(),
+        })
+      );
+
+      setInitialOrders(transformedOrders);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch orders");
     } finally {
@@ -123,12 +149,8 @@ export default function AdminPage() {
         throw new Error("Failed to update order status");
       }
 
-      // Update local state
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
-      );
+      // Local state will be updated automatically via real-time connection
+      // No need to manually update state here
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update order");
     }
@@ -144,7 +166,9 @@ export default function AdminPage() {
       const data = await response.json();
       setMenuItems(data.menuItems || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch menu items");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch menu items"
+      );
     } finally {
       setMenuLoading(false);
     }
@@ -185,7 +209,9 @@ export default function AdminPage() {
       addToast("Menu item deleted successfully!", "success");
       fetchMenuItems();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete menu item");
+      setError(
+        err instanceof Error ? err.message : "Failed to delete menu item"
+      );
     }
   };
 
@@ -198,17 +224,23 @@ export default function AdminPage() {
   };
 
   // Filter orders based on selected status
-  const filteredOrders = statusFilter === "all" 
-    ? orders 
-    : orders.filter(order => order.status === statusFilter);
+  const filteredOrders =
+    statusFilter === "all"
+      ? orders.filter((order) => order && order.status) // Filter out any null/undefined orders
+      : orders.filter((order) => order && order.status === statusFilter);
 
-  // Get count for each status
+  // Get count for each status (with safety checks)
   const statusCounts = {
-    all: orders.length,
-    pending: orders.filter(order => order.status === "pending").length,
-    preparing: orders.filter(order => order.status === "preparing").length,
-    ready: orders.filter(order => order.status === "ready").length,
-    completed: orders.filter(order => order.status === "completed").length,
+    all: orders.filter((order) => order && order.status).length,
+    pending: orders.filter((order) => order && order.status === "pending")
+      .length,
+    preparing: orders.filter((order) => order && order.status === "preparing")
+      .length,
+    ready: orders.filter((order) => order && order.status === "ready").length,
+    completed: orders.filter((order) => order && order.status === "completed")
+      .length,
+    cancelled: orders.filter((order) => order && order.status === "cancelled")
+      .length,
   };
 
   // Show loading while auth is being checked or data is being fetched
@@ -218,7 +250,9 @@ export default function AdminPage() {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-4" />
           <p className="text-gray-400">
-            {authLoading ? "Checking authentication..." : "Loading admin dashboard..."}
+            {authLoading
+              ? "Checking authentication..."
+              : "Loading admin dashboard..."}
           </p>
         </div>
       </div>
@@ -234,14 +268,16 @@ export default function AdminPage() {
             <p className="text-gray-400 mt-1">
               {activeTab === "orders" ? (
                 <>
-                  Total Orders: {orders.length} | 
-                  Pending: {statusCounts.pending} | 
-                  Preparing: {statusCounts.preparing} | 
-                  Ready: {statusCounts.ready} | 
-                  Completed: {statusCounts.completed}
+                  Total Orders: {orders.length} | Pending:{" "}
+                  {statusCounts.pending} | Preparing: {statusCounts.preparing} |
+                  Ready: {statusCounts.ready} | Completed:{" "}
+                  {statusCounts.completed} | Cancelled: {statusCounts.cancelled}
                 </>
               ) : (
-                <>Menu Items: {menuItems.length} | Available: {menuItems.filter(item => item.isAvailable).length}</>
+                <>
+                  Menu Items: {menuItems.length} | Available:{" "}
+                  {menuItems.filter((item) => item.isAvailable).length}
+                </>
               )}
             </p>
           </div>
@@ -279,122 +315,169 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {error && (
+        {(error || realtimeError) && (
           <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6">
-            {error}
+            {error || realtimeError}
+            {realtimeError && (
+              <button
+                onClick={refreshConnection}
+                className="ml-4 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+              >
+                Retry Connection
+              </button>
+            )}
           </div>
         )}
+
+        {/* Real-time Connection Status */}
+        <RealTimeStatus
+          isConnected={isConnected}
+          error={realtimeError}
+          onRetry={refreshConnection}
+          className="mb-6"
+        />
+
+
 
         {/* Orders Management Tab */}
         {activeTab === "orders" && (
           <>
             {/* Filter Section */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Filter className="h-5 w-5 text-gray-400" />
-            <span className="text-gray-300 font-medium">Filter by Status:</span>
-          </div>
-          
-          {/* Desktop Filter Buttons */}
-          <div className="hidden md:flex flex-wrap gap-3">
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === "all"
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              All Orders ({statusCounts.all})
-            </button>
-            
-            <button
-              onClick={() => setStatusFilter("pending")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === "pending"
-                  ? "bg-yellow-500 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Pending ({statusCounts.pending})
-            </button>
-            
-            <button
-              onClick={() => setStatusFilter("preparing")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === "preparing"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Preparing ({statusCounts.preparing})
-            </button>
-            
-            <button
-              onClick={() => setStatusFilter("ready")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === "ready"
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Ready ({statusCounts.ready})
-            </button>
-            
-            <button
-              onClick={() => setStatusFilter("completed")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === "completed"
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Completed ({statusCounts.completed})
-            </button>
-          </div>
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <Filter className="h-5 w-5 text-gray-400" />
+                <span className="text-gray-300 font-medium">
+                  Filter by Status:
+                </span>
+              </div>
 
-          {/* Mobile Filter Dropdown */}
-          <div className="md:hidden">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as Order["status"] | "all")}
-              className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="all">All Orders ({statusCounts.all})</option>
-              <option value="pending">Pending ({statusCounts.pending})</option>
-              <option value="preparing">Preparing ({statusCounts.preparing})</option>
-              <option value="ready">Ready ({statusCounts.ready})</option>
-              <option value="completed">Completed ({statusCounts.completed})</option>
-            </select>
-          </div>
-        </div>
+              {/* Desktop Filter Buttons */}
+              <div className="hidden md:flex flex-wrap gap-3">
+                <button
+                  onClick={() => setStatusFilter("all")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    statusFilter === "all"
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  All Orders ({statusCounts.all})
+                </button>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4">
-            {statusFilter === "all" ? "All Orders" : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Orders`} ({filteredOrders.length})
-          </h2>
+                <button
+                  onClick={() => setStatusFilter("pending")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    statusFilter === "pending"
+                      ? "bg-yellow-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  Pending ({statusCounts.pending})
+                </button>
 
-          {filteredOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">
-                {statusFilter === "all" 
-                  ? "No orders found" 
-                  : `No ${statusFilter} orders found`
-                }
-              </p>
+                <button
+                  onClick={() => setStatusFilter("preparing")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    statusFilter === "preparing"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  Preparing ({statusCounts.preparing})
+                </button>
+
+                <button
+                  onClick={() => setStatusFilter("ready")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    statusFilter === "ready"
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  Ready ({statusCounts.ready})
+                </button>
+
+                <button
+                  onClick={() => setStatusFilter("completed")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    statusFilter === "completed"
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  Completed ({statusCounts.completed})
+                </button>
+
+                <button
+                  onClick={() => setStatusFilter("cancelled")}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    statusFilter === "cancelled"
+                      ? "bg-red-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  Cancelled ({statusCounts.cancelled})
+                </button>
+              </div>
+
+              {/* Mobile Filter Dropdown */}
+              <div className="md:hidden">
+                <select
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(e.target.value as Order["status"] | "all")
+                  }
+                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="all">All Orders ({statusCounts.all})</option>
+                  <option value="pending">
+                    Pending ({statusCounts.pending})
+                  </option>
+                  <option value="preparing">
+                    Preparing ({statusCounts.preparing})
+                  </option>
+                  <option value="ready">Ready ({statusCounts.ready})</option>
+                  <option value="completed">
+                    Completed ({statusCounts.completed})
+                  </option>
+                  <option value="cancelled">
+                    Cancelled ({statusCounts.cancelled})
+                  </option>
+                </select>
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredOrders.map((order) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  onStatusUpdate={updateOrderStatus}
-                />
-              ))}
+
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-white mb-4">
+                {statusFilter === "all"
+                  ? "All Orders"
+                  : `${
+                      statusFilter.charAt(0).toUpperCase() +
+                      statusFilter.slice(1)
+                    } Orders`}{" "}
+                ({filteredOrders.length})
+              </h2>
+
+              {filteredOrders.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg">
+                    {statusFilter === "all"
+                      ? "No orders found"
+                      : `No ${statusFilter} orders found`}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredOrders.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      onStatusUpdate={updateOrderStatus}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
           </>
         )}
 
@@ -423,7 +506,9 @@ export default function AdminPage() {
             ) : menuItems.length === 0 ? (
               <div className="text-center py-12">
                 <UtensilsCrossed className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-400 text-lg mb-4">No menu items found</p>
+                <p className="text-gray-400 text-lg mb-4">
+                  No menu items found
+                </p>
                 <button
                   onClick={() => setShowAddMenuForm(true)}
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"

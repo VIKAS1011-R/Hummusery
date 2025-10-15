@@ -14,7 +14,7 @@ interface Order {
   id: string;
   orderNumber: string;
   items: OrderItem[];
-  status: "pending" | "preparing" | "ready" | "completed";
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
   customerName: string;
   customerEmail: string;
   totalAmount: number;
@@ -54,11 +54,23 @@ const statusConfig = {
     bgColor: "bg-green-500/10",
     borderColor: "border-green-500/20",
     label: "Completed"
+  },
+  cancelled: {
+    icon: Clock,
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    borderColor: "border-red-500/20",
+    label: "Cancelled"
   }
 };
 
 export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
-  const currentStatus = statusConfig[order.status];
+  // Safety check for order object
+  if (!order) {
+    return null;
+  }
+
+  const currentStatus = statusConfig[order.status] || statusConfig.pending;
   const StatusIcon = currentStatus.icon;
 
   const formatDate = (dateString: string) => {
@@ -96,7 +108,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
       {/* Items */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-300">Items:</h4>
-        {order.items.map((item) => (
+        {order.items && order.items.length > 0 ? order.items.map((item) => (
           <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-700/50 rounded-lg">
             <div className="flex-shrink-0 mt-1">
               {item.isVeg ? (
@@ -122,7 +134,11 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
               </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="p-3 bg-gray-700/50 rounded-lg">
+            <p className="text-gray-400 text-sm">No items available</p>
+          </div>
+        )}
       </div>
 
       {/* Total */}
@@ -147,6 +163,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
           <option value="preparing">Preparing</option>
           <option value="ready">Ready for Pickup</option>
           <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
     </div>
