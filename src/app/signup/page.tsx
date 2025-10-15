@@ -86,6 +86,7 @@ export default function SignupPage() {
       if (response.ok) {
         // Update auth context with user data
         setUser({
+          id: data.user.id,
           name: data.user.name,
           email: data.user.email,
           phone: data.user.phone,
