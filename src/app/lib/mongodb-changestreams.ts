@@ -1,9 +1,30 @@
 // Server-side MongoDB Change Streams service
 import { MongoClient, ChangeStream, ChangeStreamDocument } from "mongodb";
 
+interface OrderItem {
+  id: string;
+  name: string;
+  description: string;
+  isVeg: boolean;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  items: OrderItem[];
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
+  customerName: string;
+  customerEmail: string;
+  totalAmount: number;
+  userId: string;
+  createdAt: string;
+}
+
 interface OrderChangeEvent {
   type: "order_created" | "order_updated" | "order_deleted";
-  order?: any;
+  order?: Order | null;
   orderId?: string;
 }
 
@@ -119,22 +140,27 @@ class MongoDBChangeStreamsService {
     }
   }
 
-  private transformOrder(document: any) {
+  private transformOrder(document: Record<string, unknown> | null | undefined): Order | null {
     if (!document) return null;
 
-    return {
+    // Type-safe transformation
+    const transformed = {
       ...document,
-      id: document._id?.toString(),
+      id: document._id?.toString() || '',
       createdAt:
         document.createdAt instanceof Date
           ? document.createdAt.toISOString()
-          : document.createdAt,
+          : (document.createdAt as string) || new Date().toISOString(),
       updatedAt:
         document.updatedAt instanceof Date
           ? document.updatedAt.toISOString()
-          : document.updatedAt,
-      _id: undefined, // Remove MongoDB _id field
+          : (document.updatedAt as string) || new Date().toISOString(),
     };
+
+    // Remove MongoDB _id field
+    delete (transformed as Record<string, unknown>)._id;
+
+    return transformed as unknown as Order;
   }
 
   private async handleReconnect() {

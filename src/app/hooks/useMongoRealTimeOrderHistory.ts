@@ -14,9 +14,30 @@ interface OrderHistoryItem {
   orderDate: string;
 }
 
+interface OrderItem {
+  id: string;
+  name: string;
+  description: string;
+  isVeg: boolean;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  items: OrderItem[];
+  status: "pending" | "preparing" | "ready" | "completed" | "cancelled";
+  customerName: string;
+  customerEmail: string;
+  totalAmount: number;
+  userId: string;
+  createdAt: string;
+}
+
 interface OrderUpdateEvent {
   type: 'order_created' | 'order_updated' | 'order_deleted' | 'connected' | 'heartbeat';
-  order?: any;
+  order?: Order;
   orderId?: string;
   message?: string;
   userId?: string;
@@ -91,7 +112,7 @@ export function useMongoRealTimeOrderHistory(initialOrderHistory: OrderHistoryIt
                 const newHistoryItem: OrderHistoryItem = {
                   orderId: data.order.id,
                   orderNumber: data.order.orderNumber,
-                  items: data.order.items.map((item: any) => ({
+                  items: data.order.items.map((item: OrderItem) => ({
                     name: item.name,
                     quantity: item.quantity,
                     price: item.price,
