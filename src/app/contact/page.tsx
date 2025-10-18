@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapPin, Phone, Mail, Clock, Send, Loader2 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function ContactPage() {
+  const { user } = useAuth();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,6 +16,17 @@ export default function ContactPage() {
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // Auto-fill when user is logged in
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+      }));
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,7 +36,12 @@ export default function ContactPage() {
     setTimeout(() => {
       setLoading(false);
       setSubmitted(true);
-      setFormData({ name: "", email: "", message: "" });
+
+      // Only reset the message, preserve name and email
+      setFormData((prev) => ({
+        ...prev,
+        message: "", // Only clear message field
+      }));
 
       // Reset success message after 5 seconds
       setTimeout(() => setSubmitted(false), 5000);
@@ -75,9 +94,9 @@ export default function ContactPage() {
                   <div>
                     <h3 className="text-white font-semibold mb-1">Location</h3>
                     <p className="text-gray-400">
-                      123 Culinary Street, Food District
+                      Shop 150, 1st Main Rd, near christ university,
+                      Amaravathi Layout, HMT Layout,Bengaluru, Karnataka 560073
                     </p>
-                    <p className="text-gray-400">New York, NY 10001</p>
                   </div>
                 </div>
 
@@ -85,7 +104,7 @@ export default function ContactPage() {
                   <Phone className="h-6 w-6 text-orange-500 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="text-white font-semibold mb-1">Phone</h3>
-                    <p className="text-gray-400">+1 (555) 123-4567</p>
+                    <p className="text-gray-400">074839 39713</p>
                     <p className="text-gray-400 text-sm">
                       Available during business hours
                     </p>
@@ -96,7 +115,7 @@ export default function ContactPage() {
                   <Mail className="h-6 w-6 text-orange-500 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="text-white font-semibold mb-1">Email</h3>
-                    <p className="text-gray-400">hello@hummusery.com</p>
+                    <p className="text-gray-400">hummusery1@gmail.com</p>
                     <p className="text-gray-400 text-sm">
                       We&apos;ll respond within 24 hours
                     </p>
@@ -110,8 +129,7 @@ export default function ContactPage() {
                       Business Hours
                     </h3>
                     <div className="text-gray-400">
-                      <p>Monday - Friday: 11:00 AM - 11:00 PM</p>
-                      <p>Saturday - Sunday: 10:00 AM - 12:00 AM</p>
+                      <p>Monday - Sunday: 11:00 AM - 10:30 PM</p>
                     </div>
                   </div>
                 </div>
@@ -142,6 +160,7 @@ export default function ContactPage() {
                     className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600"
                     placeholder="Enter your full name"
                     required
+                    disabled={!!user}
                   />
                 </div>
 
@@ -156,6 +175,7 @@ export default function ContactPage() {
                     className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600"
                     placeholder="Enter your email address"
                     required
+                    disabled={!!user}
                   />
                 </div>
 
