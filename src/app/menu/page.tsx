@@ -79,15 +79,14 @@ export default function MenuPage() {
   };
 
   // Handle buy now functionality
-  const handleBuyNow = async (menuItemId: string) => {
+  const handleBuyNow = (menuItemId: string, buyQuantity: number = 1) => {
     if (!user) {
       window.location.href = '/login';
       return;
     }
     
-    // Add to cart first, then redirect to cart
-    await addToCart(menuItemId, 1);
-    window.location.href = '/cart';
+    // Redirect directly to payment page with the item and quantity
+    window.location.href = `/payment?item=${menuItemId}&quantity=${buyQuantity}`;
   };
 
   // Handle quantity update
@@ -322,7 +321,7 @@ export default function MenuPage() {
                                 
                                 {/* Buy Now Button */}
                                 <button 
-                                  onClick={() => handleBuyNow(item._id)}
+                                  onClick={() => handleBuyNow(item._id, getCartItemQuantity(item._id) || 1)}
                                   disabled={cartLoading}
                                   className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
