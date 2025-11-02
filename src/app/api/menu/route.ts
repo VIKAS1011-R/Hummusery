@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MenuItemService } from "@/app/db/services/menuItemService";
 import { CreateMenuItemData } from "@/app/db/models/MenuItem";
+import jwt from "jsonwebtoken";
+import { ObjectId } from "mongodb";
+import { connectToDatabase } from "@/app/db/connection";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,6 +43,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check admin authentication
+    const token = request.cookies.get("auth-token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const db = await connectToDatabase();
+    
+    const user = await db.collection("users").findOne({
+      _id: new ObjectId(decoded.userId)
+    });
+
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
     const body = await request.json();
     
     // Validate required fields

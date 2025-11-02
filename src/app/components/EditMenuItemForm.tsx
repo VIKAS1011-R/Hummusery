@@ -83,6 +83,7 @@ export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenu
 
       const response = await fetch(`/api/menu/${item._id}`, {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

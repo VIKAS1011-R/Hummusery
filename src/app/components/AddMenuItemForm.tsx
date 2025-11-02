@@ -70,6 +70,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
 
       const response = await fetch("/api/menu", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

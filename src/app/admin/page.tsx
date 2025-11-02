@@ -202,6 +202,7 @@ export default function AdminPage() {
     try {
       const response = await fetch(`/api/menu/${itemId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
