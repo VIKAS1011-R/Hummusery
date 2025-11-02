@@ -92,10 +92,11 @@ export default function SignupPage() {
           email: data.user.email,
           phone: data.user.phone,
           role: data.user.role,
+          isEmailVerified: data.user.isEmailVerified,
         });
         
-        // Show toast and redirect
-        addToast(`Welcome to Hummusery, ${data.user.name}!`, 'success');
+        // Show success message
+        addToast(data.message, 'success');
         
         // Clear form
         setName('');
@@ -104,9 +105,9 @@ export default function SignupPage() {
         setPassword('');
         setConfirm('');
         
-        // Redirect to home page after a short delay
+        // Redirect to settings page where users can verify email if needed
         setTimeout(() => {
-          router.push('/');
+          router.push('/settings');
         }, 1000);
       } else {
         setError(data.error || 'Something went wrong. Please try again.');

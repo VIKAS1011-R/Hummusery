@@ -71,14 +71,32 @@ export async function POST(request: NextRequest) {
 
     let userId: string;
     let userEmail: string;
+    let isEmailVerified: boolean;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
+        userId: string; 
+        email: string; 
+        isEmailVerified: boolean 
+      };
       userId = decoded.userId;
       userEmail = decoded.email;
+      isEmailVerified = decoded.isEmailVerified;
     } catch (error) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 401 }
+      );
+    }
+
+    // Check if email is verified before processing payment verification
+    if (!isEmailVerified) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Email verification required to complete payment", 
+          requiresVerification: true 
+        },
+        { status: 403 }
       );
     }
 

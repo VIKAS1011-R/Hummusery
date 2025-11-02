@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import AuthCard from "../components/AuthCard";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
@@ -121,7 +122,7 @@ export default function LoginPage() {
             <span className="ml-2">Remember me</span>
           </label>
 
-          <a href="#" className="text-sm text-orange-500 hover:underline">Forgot password?</a>
+          <Link href="/forgot-password" className="text-sm text-orange-500 hover:underline">Forgot password?</Link>
         </div>
 
         <button

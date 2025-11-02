@@ -11,11 +11,12 @@ import {
   Plus,
   UtensilsCrossed,
   ClipboardList,
-
+  Tags,
 } from "lucide-react";
 import AddMenuItemForm from "@/app/components/AddMenuItemForm";
 import EditMenuItemForm from "@/app/components/EditMenuItemForm";
 import MenuItemCard from "@/app/components/MenuItemCard";
+import CategoryManager from "@/app/components/CategoryManager";
 
 import { useMongoRealTimeOrders } from "@/app/hooks/useMongoRealTimeOrders";
 import RealTimeStatus from "@/app/components/RealTimeStatus";
@@ -46,6 +47,7 @@ interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category: string;
   isAvailable: boolean;
   createdAt: Date;
@@ -70,7 +72,7 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">(
     "all"
   );
-  const [activeTab, setActiveTab] = useState<"orders" | "menu">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "menu" | "categories">("orders");
   const [showAddMenuForm, setShowAddMenuForm] = useState(false);
   const [showEditMenuForm, setShowEditMenuForm] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -218,7 +220,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleTabChange = (tab: "orders" | "menu") => {
+  const handleTabChange = (tab: "orders" | "menu" | "categories") => {
     setActiveTab(tab);
     setError(null);
     if (tab === "menu" && menuItems.length === 0) {
@@ -277,10 +279,14 @@ export default function AdminPage() {
                   Ready: {statusCounts.ready} | Completed:{" "}
                   {statusCounts.completed} | Cancelled: {statusCounts.cancelled}
                 </>
-              ) : (
+              ) : activeTab === "menu" ? (
                 <>
                   Menu Items: {menuItems.length} | Available:{" "}
                   {menuItems.filter((item) => item.isAvailable).length}
+                </>
+              ) : (
+                <>
+                  Manage menu categories and organization
                 </>
               )}
             </p>
@@ -316,6 +322,17 @@ export default function AdminPage() {
           >
             <UtensilsCrossed className="h-4 w-4" />
             Menu Management
+          </button>
+          <button
+            onClick={() => handleTabChange("categories")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === "categories"
+                ? "bg-orange-500 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+          >
+            <Tags className="h-4 w-4" />
+            Categories
           </button>
 
         </div>
@@ -536,7 +553,14 @@ export default function AdminPage() {
           </div>
         )}
 
-{/* Add Menu Item Form Modal */}
+        {/* Categories Management Tab */}
+        {activeTab === "categories" && (
+          <div className="space-y-6">
+            <CategoryManager />
+          </div>
+        )}
+
+        {/* Add Menu Item Form Modal */}
         {showAddMenuForm && (
           <AddMenuItemForm
             onSuccess={handleMenuItemAdded}

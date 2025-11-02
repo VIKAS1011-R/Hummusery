@@ -29,6 +29,7 @@ export class UserService {
       password: hashedPassword,
       role: userData.role || "user",
       orderHistory: [],
+      isEmailVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -53,6 +54,7 @@ export class UserService {
       phone: createdUser.phone,
       role: createdUser.role,
       orderHistory: createdUser.orderHistory || [],
+      isEmailVerified: createdUser.isEmailVerified || false,
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt,
     };
@@ -132,6 +134,29 @@ export class UserService {
       {
         $set: { 
           "orderHistory.$.status": status,
+          updatedAt: new Date()
+        }
+      }
+    );
+  }
+
+  static async updateUserVerificationData(
+    userId: string,
+    verificationData: {
+      emailVerificationOTP: string;
+      emailVerificationToken: string;
+      otpExpiresAt: Date;
+      tokenExpiresAt: Date;
+    }
+  ): Promise<void> {
+    const db = await connectToDatabase();
+    const usersCollection = db.collection<User>(USERS_COLLECTION);
+
+    await usersCollection.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          ...verificationData,
           updatedAt: new Date()
         }
       }

@@ -5,6 +5,7 @@ import { Clock, CheckCircle, Package, Truck, Leaf, Beef, ArrowLeft } from "lucid
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import PageWrapper from "@/app/components/PageWrapper";
 import { useAuth } from "@/app/context/AuthContext";
 import { useMongoRealTimeOrderHistory } from "@/app/hooks/useMongoRealTimeOrderHistory";
 import RealTimeStatus from "@/app/components/RealTimeStatus";
@@ -93,7 +94,7 @@ export default function OrderHistoryPage() {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log("Order history data:", data); // Debug log
+
         if (data.success) {
           setInitialOrderHistory(data.orderHistory);
         } else {
@@ -126,12 +127,14 @@ export default function OrderHistoryPage() {
     return (
       <div className="min-h-screen bg-gray-900">
         <Navbar />
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-gray-400">Checking authentication...</p>
+        <PageWrapper>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">Checking authentication...</p>
+            </div>
           </div>
-        </div>
+        </PageWrapper>
       </div>
     );
   }
@@ -140,19 +143,21 @@ export default function OrderHistoryPage() {
     return (
       <div className="min-h-screen bg-gray-900">
         <Navbar />
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-4">Please Log In</h1>
-            <p className="text-gray-400 mb-6">You need to be logged in to view your order history.</p>
-            <Link
-              href="/login"
-              className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
-            >
-              Log In
-            </Link>
+        <PageWrapper>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-white mb-4">Please Log In</h1>
+              <p className="text-gray-400 mb-6">You need to be logged in to view your order history.</p>
+              <Link
+                href="/login"
+                className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+              >
+                Log In
+              </Link>
+            </div>
           </div>
-        </div>
+        </PageWrapper>
       </div>
     );
   }
@@ -161,8 +166,9 @@ export default function OrderHistoryPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
       
-      {/* Header */}
-      <section className="pt-20 pb-8 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <PageWrapper>
+        {/* Header */}
+        <section className="pb-8 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -301,7 +307,8 @@ export default function OrderHistoryPage() {
         </div>
       </section>
 
-      <Footer />
+        <Footer />
+      </PageWrapper>
     </div>
   );
 }

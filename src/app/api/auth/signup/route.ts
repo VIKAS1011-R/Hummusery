@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { UserService } from "@/app/db/services/userService";
 import { CreateUserData } from "@/app/db/models/User";
+import { sendOTPEmail, generateOTP, generateVerificationToken } from "@/app/lib/emailService";
 import { cookies } from "next/headers";
 import { sign } from "jsonwebtoken";
 
@@ -44,17 +45,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user
+    // Create user (not verified initially)
     const user = await UserService.createUser({ name, email, phone, password });
 
-    // Generate JWT token for automatic login
+    // Generate OTP and verification token
+    const otp = generateOTP();
+    const verificationToken = generateVerificationToken();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Update user with verification data
+    await UserService.updateUserVerificationData(user._id, {
+      emailVerificationOTP: otp,
+      emailVerificationToken: verificationToken,
+      otpExpiresAt,
+      tokenExpiresAt
+    });
+
+    // Send OTP email
+    const emailSent = await sendOTPEmail(email, name, otp, verificationToken);
+
+    if (!emailSent) {
+      console.error("Failed to send verification email to:", email);
+      // Don't fail the signup, just log the error
+    }
+
+    // Generate JWT token for the unverified user
     const token = sign(
       { 
         userId: user._id,
         email: user.email,
         name: user.name,
         phone: user.phone,
-        role: user.role
+        role: user.role,
+        isEmailVerified: false
       },
       JWT_SECRET,
       { expiresIn: '24h' }
@@ -72,15 +96,18 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Account created successfully! You are now logged in.",
+        message: "Account created successfully! Please check your email to verify your account.",
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
           phone: user.phone,
           role: user.role,
+          isEmailVerified: false,
           createdAt: user.createdAt,
         },
+        requiresVerification: true,
+        otpExpiresAt: otpExpiresAt.toISOString()
       },
       { status: 201 }
     );

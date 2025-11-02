@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { MapPin, Phone, Mail, Clock, Send, Loader2 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import PageWrapper from "@/app/components/PageWrapper";
 
 import { useAuth } from "@/app/context/AuthContext";
 
@@ -60,8 +61,9 @@ export default function ContactPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="pt-20 pb-12 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900">
+      <PageWrapper>
+        {/* Hero Section */}
+        <section className="pb-12 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-amber-500/10 dark:from-black/40 dark:via-black/20 dark:to-black/40" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-700 via-red-600 to-orange-700 bg-clip-text text-transparent dark:from-orange-400 dark:via-amber-300 dark:to-orange-400 mb-4">
@@ -220,7 +222,8 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <Footer />
+        <Footer />
+      </PageWrapper>
     </div>
   );
 }

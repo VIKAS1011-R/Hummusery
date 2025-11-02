@@ -6,6 +6,7 @@ export interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category?: string;
   isAvailable: boolean;
   createdAt: Date;
@@ -17,6 +18,7 @@ export interface CreateMenuItemData {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category?: string;
   isAvailable?: boolean;
 }
@@ -26,6 +28,7 @@ export interface UpdateMenuItemData {
   ingredients?: string;
   isVeg?: boolean;
   price?: number;
+  halfPlatePrice?: number | null;
   category?: string;
   isAvailable?: boolean;
 }
@@ -36,6 +39,7 @@ export interface MenuItemResponse {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category?: string;
   isAvailable: boolean;
   createdAt: Date;

@@ -63,13 +63,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    const { name, ingredients, isVeg, price } = body;
+    const { name, ingredients, isVeg, price, halfPlatePrice } = body;
     
-    if (!name || !ingredients || typeof isVeg !== 'boolean' || typeof price !== 'number') {
+    if (!name || typeof isVeg !== 'boolean' || typeof price !== 'number') {
       return NextResponse.json(
         { 
           success: false, 
-          error: "Missing or invalid required fields: name, ingredients, isVeg, price" 
+          error: "Missing or invalid required fields: name, isVeg, price" 
         },
         { status: 400 }
       );
@@ -85,6 +85,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate half plate price if provided
+    if (halfPlatePrice !== null && halfPlatePrice !== undefined) {
+      if (typeof halfPlatePrice !== 'number' || halfPlatePrice <= 0) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: "Half plate price must be a number greater than 0" 
+          },
+          { status: 400 }
+        );
+      }
+      
+      if (halfPlatePrice >= price) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: "Half plate price must be less than full plate price" 
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     if (name.trim().length < 2) {
       return NextResponse.json(
         { 
@@ -95,11 +118,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (ingredients.trim().length < 10) {
+    // Optional validation for ingredients if provided
+    if (ingredients && ingredients.trim().length > 0 && ingredients.trim().length < 3) {
       return NextResponse.json(
         { 
           success: false, 
-          error: "Ingredients description must be at least 10 characters long" 
+          error: "Ingredients description must be at least 3 characters long if provided" 
         },
         { status: 400 }
       );
@@ -107,9 +131,10 @@ export async function POST(request: NextRequest) {
 
     const menuItemData: CreateMenuItemData = {
       name: name.trim(),
-      ingredients: ingredients.trim(),
+      ingredients: ingredients ? ingredients.trim() : "",
       isVeg,
       price,
+      halfPlatePrice: halfPlatePrice || null,
       category: body.category?.trim() || "Main Course",
       isAvailable: body.isAvailable !== undefined ? body.isAvailable : true
     };

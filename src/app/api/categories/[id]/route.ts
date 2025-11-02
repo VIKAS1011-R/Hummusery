@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MenuItemService } from "@/app/db/services/menuItemService";
+import { CategoryService } from "@/app/db/services/categoryService";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "@/app/db/connection";
@@ -13,21 +13,21 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const menuItem = await MenuItemService.getMenuItemById(id);
+    const category = await CategoryService.getCategoryById(id);
 
-    if (!menuItem) {
+    if (!category) {
       return NextResponse.json(
-        { error: "Menu item not found" },
+        { error: "Category not found" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      menuItem,
+      category,
     });
   } catch (error) {
-    console.error("Error fetching menu item:", error);
+    console.error("Error fetching category:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -35,7 +35,7 @@ export async function GET(
   }
 }
 
-// Update menu item
+// Update category
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -65,31 +65,36 @@ export async function PATCH(
     const updateData = await request.json();
 
     // Validate required fields
-    if (!updateData.name || updateData.price === undefined) {
+    if (updateData.name && updateData.name.trim().length < 2) {
       return NextResponse.json(
-        { error: "Name and price are required" },
+        { error: "Category name must be at least 2 characters long" },
         { status: 400 }
       );
     }
 
-    const updatedMenuItem = await MenuItemService.updateMenuItem(id, {
-      ...updateData,
-      updatedAt: new Date(),
-    });
+    const updatedCategory = await CategoryService.updateCategory(id, updateData);
 
-    if (!updatedMenuItem) {
+    if (!updatedCategory) {
       return NextResponse.json(
-        { error: "Menu item not found" },
+        { error: "Category not found" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      menuItem: updatedMenuItem,
+      category: updatedCategory,
     });
   } catch (error) {
-    console.error("Error updating menu item:", error);
+    console.error("Error updating category:", error);
+    
+    if (error instanceof Error && error.message.includes("already exists")) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -97,7 +102,7 @@ export async function PATCH(
   }
 }
 
-// Delete menu item
+// Delete category
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -125,21 +130,29 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const deleted = await MenuItemService.deleteMenuItem(id);
+    const deleted = await CategoryService.deleteCategory(id);
 
     if (!deleted) {
       return NextResponse.json(
-        { error: "Menu item not found" },
+        { error: "Category not found" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: "Menu item deleted successfully",
+      message: "Category deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting menu item:", error);
+    console.error("Error deleting category:", error);
+    
+    if (error instanceof Error && error.message.includes("Cannot delete category")) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

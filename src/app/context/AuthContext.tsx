@@ -3,16 +3,17 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
-  user: { id: string; name: string; email: string; phone: string; role: string; theme?: "light" | "dark" } | null;
-  setUser: (user: { id: string; name: string; email: string; phone: string; role: string; theme?: "light" | "dark" } | null) => void;
+  user: { id: string; name: string; email: string; phone: string; role: string; theme?: "light" | "dark"; isEmailVerified?: boolean } | null;
+  setUser: (user: { id: string; name: string; email: string; phone: string; role: string; theme?: "light" | "dark"; isEmailVerified?: boolean } | null) => void;
   logout: () => Promise<void>;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<{ id: string; name: string; email: string; phone: string; role: string; theme?: "light" | "dark" } | null>(
+  const [user, setUser] = useState<{ id: string; name: string; email: string; phone: string; role: string; theme?: "light" | "dark"; isEmailVerified?: boolean } | null>(
     null
   );
   const [loading, setLoading] = useState(true);
@@ -28,12 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch("/api/auth/check");
       if (response.ok) {
         const data = await response.json();
-        console.log("Auth check response:", data);
+
         if (data.user) {
           setUser(data.user);
         }
       } else {
-        console.log("Auth check failed with status:", response.status);
+
       }
     } catch (error) {
       console.error("Auth check failed:", error);
@@ -52,8 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    await checkAuth();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

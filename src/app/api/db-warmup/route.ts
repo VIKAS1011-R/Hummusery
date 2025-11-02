@@ -35,7 +35,7 @@ export async function POST() {
   }
 }
 
-// Also allow GET for easy testing
+// Allow GET method for health checks
 export async function GET() {
   return POST();
 }

@@ -21,6 +21,11 @@ export interface User {
   role: string;
   theme?: "light" | "dark";
   orderHistory: OrderHistoryItem[];
+  isEmailVerified: boolean;
+  emailVerificationOTP?: string;
+  emailVerificationToken?: string;
+  otpExpiresAt?: Date;
+  tokenExpiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +46,7 @@ export interface UserResponse {
   role: string;
   theme?: "light" | "dark";
   orderHistory: OrderHistoryItem[];
+  isEmailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

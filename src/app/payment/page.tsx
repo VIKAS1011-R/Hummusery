@@ -23,6 +23,7 @@ interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category: string;
   isAvailable: boolean;
 }
@@ -75,6 +76,14 @@ function PaymentPageContent() {
 
   const handlePlaceOrder = async () => {
     if (!user || !menuItem) return;
+
+    // Check if email is verified before allowing payment
+    if (!user.isEmailVerified) {
+      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
+        window.location.href = "/verify-email";
+      }
+      return;
+    }
 
     if (!razorpayLoaded) {
       alert("Payment system is loading. Please try again in a moment.");

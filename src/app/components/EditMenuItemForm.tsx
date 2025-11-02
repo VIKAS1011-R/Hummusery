@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Save, X, Leaf, Beef, Loader2 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
+import { useCategories } from "@/app/hooks/useCategories";
 
 interface MenuItem {
   _id: string;
@@ -10,6 +11,7 @@ interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category: string;
   isAvailable: boolean;
   createdAt: Date;
@@ -27,29 +29,25 @@ interface FormData {
   ingredients: string;
   isVeg: boolean;
   price: string;
+  halfPlatePrice: string;
+  hasHalfPlate: boolean;
   category: string;
   isAvailable: boolean;
 }
 
-const categories = [
-  "Grab-and-Go Treats",
-  "Shawarma Combos",
-  "Indian Combos",
-  "The Grand Feast",
-  "Rice And Noodles Bowls",
-  "Veg Rolls",
-  "Chicken Rolls",
-  "Chinese Veg Rolls",
-  "Chinese Chicken Rolls"
-];
+
 
 export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenuItemFormProps) {
   const { addToast } = useToast();
+  const { categories, loading: categoriesLoading } = useCategories();
+  
   const [formData, setFormData] = useState<FormData>({
     name: item.name,
     ingredients: item.ingredients,
     isVeg: item.isVeg,
     price: item.price.toString(),
+    halfPlatePrice: item.halfPlatePrice ? item.halfPlatePrice.toString() : "",
+    hasHalfPlate: !!item.halfPlatePrice,
     category: item.category,
     isAvailable: item.isAvailable
   });
@@ -68,17 +66,25 @@ export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenu
         throw new Error("Name is required");
       }
       
-      if (!formData.ingredients.trim()) {
-        throw new Error("Ingredients are required");
-      }
-      
-      if (formData.ingredients.trim().length < 10) {
-        throw new Error("Ingredients description must be at least 10 characters long");
+      // Optional validation for ingredients
+      if (formData.ingredients.trim().length > 0 && formData.ingredients.trim().length < 3) {
+        throw new Error("Ingredients description must be at least 3 characters long if provided");
       }
       
       const price = parseFloat(formData.price);
       if (isNaN(price) || price <= 0) {
         throw new Error("Please enter a valid price greater than 0");
+      }
+
+      let halfPlatePrice = null;
+      if (formData.hasHalfPlate) {
+        halfPlatePrice = parseFloat(formData.halfPlatePrice);
+        if (isNaN(halfPlatePrice) || halfPlatePrice <= 0) {
+          throw new Error("Please enter a valid half plate price greater than 0");
+        }
+        if (halfPlatePrice >= price) {
+          throw new Error("Half plate price should be less than full plate price");
+        }
       }
 
       const response = await fetch(`/api/menu/${item._id}`, {
@@ -92,6 +98,7 @@ export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenu
           ingredients: formData.ingredients.trim(),
           isVeg: formData.isVeg,
           price: price,
+          halfPlatePrice: halfPlatePrice,
           category: formData.category,
           isAvailable: formData.isAvailable
         }),
@@ -157,18 +164,17 @@ export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenu
           {/* Ingredients Field */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Ingredients Description *
+              Ingredients Description (Optional)
             </label>
             <textarea
               value={formData.ingredients}
               onChange={(e) => handleInputChange("ingredients", e.target.value)}
               rows={4}
               className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-              placeholder="Describe the ingredients in 2 lines...&#10;Include preparation method and serving details."
-              required
+              placeholder="Describe the ingredients and preparation method (optional)..."
             />
             <p className="text-sm text-gray-400 mt-1">
-              {formData.ingredients.length}/200 characters (minimum 10 required)
+              {formData.ingredients.length}/200 characters (optional, minimum 3 if provided)
             </p>
           </div>
 
@@ -215,7 +221,7 @@ export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenu
             {/* Price Field */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Price (₹) *
+                {formData.hasHalfPlate ? "Full Plate Price (₹) *" : "Price (₹) *"}
               </label>
               <input
                 type="number"
@@ -239,14 +245,65 @@ export default function EditMenuItemForm({ item, onSuccess, onCancel }: EditMenu
                 onChange={(e) => handleInputChange("category", e.target.value)}
                 className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
+                {categoriesLoading ? (
+                  <option value="">Loading categories...</option>
+                ) : (
+                  categories.map((category) => (
+                    <option key={category._id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
+
+          {/* Half Plate Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Half Plate Option
+              </label>
+              <p className="text-sm text-gray-400">
+                Add half plate pricing option to this item
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleInputChange("hasHalfPlate", !formData.hasHalfPlate)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                formData.hasHalfPlate ? "bg-orange-500" : "bg-gray-600"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  formData.hasHalfPlate ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Half Plate Price Field - Only show when toggle is enabled */}
+          {formData.hasHalfPlate && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Half Plate Price (₹) *
+              </label>
+              <input
+                type="number"
+                value={formData.halfPlatePrice}
+                onChange={(e) => handleInputChange("halfPlatePrice", e.target.value)}
+                min="1"
+                step="1"
+                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="e.g., 575"
+                required
+              />
+              <p className="text-sm text-gray-400 mt-1">
+                Should be less than full plate price (₹{formData.price || "0"})
+              </p>
+            </div>
+          )}
 
           {/* Availability Toggle */}
           <div className="flex items-center justify-between">

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, Filter, Leaf, Beef, Search, Plus, Minus, ShoppingBag, Info } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import PageWrapper from "@/app/components/PageWrapper";
 
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -14,6 +15,7 @@ interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category: string;
   isAvailable: boolean;
 }
@@ -86,6 +88,14 @@ export default function MenuPage() {
       return;
     }
     
+    // Check if email is verified before allowing direct purchase
+    if (!user.isEmailVerified) {
+      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
+        window.location.href = "/verify-email";
+      }
+      return;
+    }
+    
     // Redirect directly to payment page with the item and quantity
     window.location.href = `/payment?item=${menuItemId}&quantity=${buyQuantity}`;
   };
@@ -103,9 +113,11 @@ export default function MenuPage() {
     return (
       <div className="min-h-screen bg-gray-900">
         <Navbar />
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-        </div>
+        <PageWrapper>
+          <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          </div>
+        </PageWrapper>
       </div>
     );
   }
@@ -114,8 +126,9 @@ export default function MenuPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="pt-20 pb-12 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <PageWrapper>
+        {/* Hero Section */}
+        <section className="pb-12 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
             Our Menu
@@ -267,9 +280,26 @@ export default function MenuPage() {
                           <div className="flex flex-col gap-3">
                             <div className="flex justify-between items-center">
                               <div className="flex flex-col gap-1">
-                                <span className="text-2xl font-bold text-orange-400">
-                                  ₹{item.price.toLocaleString('en-IN')}
-                                </span>
+                                {item.halfPlatePrice ? (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xl font-bold text-orange-400">
+                                        ₹{item.halfPlatePrice.toLocaleString('en-IN')}
+                                      </span>
+                                      <span className="text-sm text-gray-400">Half Plate</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xl font-bold text-orange-400">
+                                        ₹{item.price.toLocaleString('en-IN')}
+                                      </span>
+                                      <span className="text-sm text-gray-400">Full Plate</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-2xl font-bold text-orange-400">
+                                    ₹{item.price.toLocaleString('en-IN')}
+                                  </span>
+                                )}
                                 <div className="flex items-center gap-1">
                                   <Info className="h-3 w-3 text-gray-400" />
                                   <span className="text-xs text-gray-400">Incl. of all taxes</span>
@@ -350,7 +380,8 @@ export default function MenuPage() {
         </div>
       </section>
 
-      <Footer />
+        <Footer />
+      </PageWrapper>
     </div>
   );
 }

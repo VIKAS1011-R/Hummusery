@@ -1,18 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { User, Phone, Mail, Shield, Save, ArrowLeft, Palette } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { User, Phone, Mail, Shield, Save, ArrowLeft, Palette, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import PageWrapper from "@/app/components/PageWrapper";
 import ThemeSelector from "@/app/components/ThemeSelector";
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
 
 export default function SettingsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUser } = useAuth();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const hasRefreshedOnMount = useRef(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -28,6 +31,15 @@ export default function SettingsPage() {
       });
     }
   }, [user]);
+
+  // Refresh user data when component mounts to get latest verification status
+  useEffect(() => {
+    if (!authLoading && user && !hasRefreshedOnMount.current) {
+
+      hasRefreshedOnMount.current = true;
+      refreshUser();
+    }
+  }, [authLoading, user, refreshUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,17 +78,61 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSendVerificationEmail = async () => {
+    if (!user?.email) {
+      addToast("No email address found", "error");
+      return;
+    }
+
+    try {
+      setVerificationLoading(true);
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        addToast('Verification email sent! Check your inbox.', 'success');
+      } else {
+        addToast(data.error || 'Failed to send verification email', 'error');
+      }
+    } catch {
+      addToast('Failed to send verification email', 'error');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleRefreshStatus = async () => {
+    try {
+      setVerificationLoading(true);
+      await refreshUser();
+      addToast('Status refreshed!', 'success');
+    } catch {
+      addToast('Failed to refresh status', 'error');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <Navbar />
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        <PageWrapper>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+            </div>
           </div>
-        </div>
+        </PageWrapper>
       </div>
     );
   }
@@ -85,19 +141,21 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <Navbar />
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Please Log In</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">You need to be logged in to access settings.</p>
-            <Link
-              href="/login"
-              className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
-            >
-              Log In
-            </Link>
+        <PageWrapper>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Please Log In</h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">You need to be logged in to access settings.</p>
+              <Link
+                href="/login"
+                className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+              >
+                Log In
+              </Link>
+            </div>
           </div>
-        </div>
+        </PageWrapper>
       </div>
     );
   }
@@ -106,8 +164,9 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
       
-      {/* Header */}
-      <section className="pt-20 pb-8 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <PageWrapper>
+        {/* Header */}
+        <section className="pb-8 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -221,6 +280,87 @@ export default function SettingsPage() {
             </form>
           </div>
 
+          {/* Email Verification Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email Verification
+            </h2>
+            
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  {user?.isEmailVerified ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <span className="text-green-600 font-medium">Email Verified</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
+                      <span className="text-amber-600 font-medium">Email Not Verified</span>
+                    </>
+                  )}
+                  <button
+                    onClick={handleRefreshStatus}
+                    disabled={verificationLoading}
+                    className="ml-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+                    title="Refresh verification status"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${verificationLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {user?.isEmailVerified 
+                    ? "Your email address has been verified. You can place orders and access all features."
+                    : "Email verification is required to place orders and receive important updates."
+                  }
+                </p>
+                
+                {!user?.isEmailVerified && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                    <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-2">
+                      Email Verification Required For:
+                    </h4>
+                    <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                      <li>• <strong>Placing orders</strong> (required)</li>
+                      <li>• Order confirmations and updates</li>
+                      <li>• Account security notifications</li>
+                      <li>• Password reset capability</li>
+                      <li>• Special offers and promotions</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+              
+              {!user?.isEmailVerified && (
+                <div className="ml-6">
+                  <button
+                    onClick={handleSendVerificationEmail}
+                    disabled={verificationLoading}
+                    className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+                  >
+                    {verificationLoading ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        Verify Email
+                      </>
+                    )}
+                  </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                    We&apos;ll send a code to<br />{user?.email}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Account Info */}
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Account Information</h3>
@@ -242,9 +382,10 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      </section>
+        </section>
 
-      <Footer />
+        <Footer />
+      </PageWrapper>
     </div>
   );
 }

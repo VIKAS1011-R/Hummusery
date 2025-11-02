@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import { useRazorpay } from "@/app/hooks/useRazorpay";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Leaf, Beef, Store } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Leaf, Beef, Store, Mail } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import PageWrapper from "@/app/components/PageWrapper";
 
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -18,6 +19,14 @@ export default function CartPage() {
 
   const handlePlaceOrder = async () => {
     if (!user || items.length === 0) return;
+
+    // Check if email is verified before allowing payment
+    if (!user.isEmailVerified) {
+      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
+        window.location.href = "/verify-email";
+      }
+      return;
+    }
 
     if (!razorpayLoaded) {
       alert("Payment system is loading. Please try again in a moment.");
@@ -130,19 +139,21 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-gray-900">
         <Navbar />
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-4">Please Log In</h1>
-            <p className="text-gray-400 mb-6">You need to be logged in to view your cart.</p>
-            <Link
-              href="/login"
-              className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
-            >
-              Log In
-            </Link>
+        <PageWrapper>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-white mb-4">Please Log In</h1>
+              <p className="text-gray-400 mb-6">You need to be logged in to view your cart.</p>
+              <Link
+                href="/login"
+                className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+              >
+                Log In
+              </Link>
+            </div>
           </div>
-        </div>
+        </PageWrapper>
       </div>
     );
   }
@@ -151,8 +162,9 @@ export default function CartPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
       
-      {/* Header */}
-      <section className="pt-20 pb-8 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <PageWrapper>
+        {/* Header */}
+        <section className="pb-8 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/menu" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -293,6 +305,19 @@ export default function CartPage() {
                 </div>
 
                 <div className="space-y-3">
+                  {/* Email Verification Notice */}
+                  {!user?.isEmailVerified && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                        <Mail className="h-4 w-4" />
+                        <span className="text-sm font-medium">Email verification required for checkout</span>
+                      </div>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                        Verify your email to place orders and receive updates
+                      </p>
+                    </div>
+                  )}
+                  
                   <button 
                     onClick={handlePlaceOrder}
                     disabled={placingOrder || loading}
@@ -331,7 +356,8 @@ export default function CartPage() {
         </div>
       </section>
 
-      <Footer />
+        <Footer />
+      </PageWrapper>
     </div>
   );
 }

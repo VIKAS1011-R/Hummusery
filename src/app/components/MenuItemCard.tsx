@@ -7,6 +7,7 @@ interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category: string;
   isAvailable: boolean;
   createdAt: Date;
@@ -53,9 +54,26 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
       {/* Footer */}
       <div className="flex justify-between items-center">
         <div>
-          <span className="text-orange-400 font-bold text-lg">
-            ₹{item.price.toLocaleString('en-IN')}
-          </span>
+          {item.halfPlatePrice ? (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-orange-400 font-bold text-sm">
+                  ₹{item.halfPlatePrice.toLocaleString('en-IN')}
+                </span>
+                <span className="text-gray-500 text-xs">Half</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-orange-400 font-bold text-sm">
+                  ₹{item.price.toLocaleString('en-IN')}
+                </span>
+                <span className="text-gray-500 text-xs">Full</span>
+              </div>
+            </div>
+          ) : (
+            <span className="text-orange-400 font-bold text-lg">
+              ₹{item.price.toLocaleString('en-IN')}
+            </span>
+          )}
           <p className="text-gray-400 text-sm">{item.category}</p>
         </div>
         

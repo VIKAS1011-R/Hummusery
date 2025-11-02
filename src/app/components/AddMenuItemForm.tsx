@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Plus, X, Leaf, Beef, Loader2 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
+import { useCategories } from "@/app/hooks/useCategories";
 
 interface AddMenuItemFormProps {
   onSuccess: () => void;
@@ -16,33 +17,39 @@ interface FormData {
   price: string;
   category: string;
   isAvailable: boolean;
+  hasHalfPlate: boolean;
+  halfPlatePrice: string;
 }
 
-const categories = [
-  "Grab-and-Go Treats",
-  "Shawarma Combos",
-  "Indian Combos",
-  "The Grand Feast",
-  "Rice And Noodles Bowls",
-  "Veg Rolls",
-  "Chicken Rolls",
-  "Chinese Veg Rolls",
-  "Chinese Chicken Rolls"
-];
+
 
 export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemFormProps) {
   const { addToast } = useToast();
+  const { categories, loading: categoriesLoading } = useCategories();
+  
   const [formData, setFormData] = useState<FormData>({
     name: "",
     ingredients: "",
     isVeg: true,
     price: "",
-    category: "Shawarma Combos",
-    isAvailable: true
+    category: "",
+    isAvailable: true,
+    hasHalfPlate: false,
+    halfPlatePrice: ""
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Set default category when categories are loaded
+  React.useEffect(() => {
+    if (categories.length > 0 && !formData.category) {
+      setFormData(prev => ({
+        ...prev,
+        category: categories[0].name
+      }));
+    }
+  }, [categories, formData.category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,18 +62,37 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
         throw new Error("Name is required");
       }
       
-      if (!formData.ingredients.trim()) {
-        throw new Error("Ingredients are required");
+      // Optional validation for ingredients
+      if (formData.ingredients.trim().length > 0 && formData.ingredients.trim().length < 3) {
+        throw new Error("Ingredients description must be at least 3 characters long if provided");
       }
       
-      if (formData.ingredients.trim().length < 10) {
-        throw new Error("Ingredients description must be at least 10 characters long");
-      }
-      
-      const price = parseFloat(formData.price);
-      if (isNaN(price) || price <= 0) {
+      const fullPlatePrice = parseFloat(formData.price);
+      if (isNaN(fullPlatePrice) || fullPlatePrice <= 0) {
         throw new Error("Please enter a valid price greater than 0");
       }
+
+      let halfPlatePrice = null;
+      if (formData.hasHalfPlate) {
+        halfPlatePrice = parseFloat(formData.halfPlatePrice);
+        if (isNaN(halfPlatePrice) || halfPlatePrice <= 0) {
+          throw new Error("Please enter a valid half plate price greater than 0");
+        }
+        if (halfPlatePrice >= fullPlatePrice) {
+          throw new Error("Half plate price should be less than full plate price");
+        }
+      }
+
+      // Create single menu item with optional half plate pricing
+      const menuItem = {
+        name: formData.name.trim(),
+        ingredients: formData.ingredients.trim(),
+        isVeg: formData.isVeg,
+        price: fullPlatePrice,
+        halfPlatePrice: halfPlatePrice, // null if not enabled
+        category: formData.category,
+        isAvailable: formData.isAvailable
+      };
 
       const response = await fetch("/api/menu", {
         method: "POST",
@@ -74,14 +100,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          ingredients: formData.ingredients.trim(),
-          isVeg: formData.isVeg,
-          price: price,
-          category: formData.category,
-          isAvailable: formData.isAvailable
-        }),
+        body: JSON.stringify(menuItem),
       });
 
       const data = await response.json();
@@ -96,11 +115,14 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
         ingredients: "",
         isVeg: true,
         price: "",
-        category: "Shawarma Combos",
-        isAvailable: true
+        category: categories.length > 0 ? categories[0].name : "",
+        isAvailable: true,
+        hasHalfPlate: false,
+        halfPlatePrice: ""
       });
       
-      addToast(`Menu item "${formData.name}" added successfully!`, 'success');
+      const plateText = formData.hasHalfPlate ? " with half & full plate options" : "";
+      addToast(`Menu item "${formData.name}"${plateText} added successfully!`, 'success');
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create menu item");
@@ -154,18 +176,17 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
           {/* Ingredients Field */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Ingredients Description *
+              Ingredients Description (Optional)
             </label>
             <textarea
               value={formData.ingredients}
               onChange={(e) => handleInputChange("ingredients", e.target.value)}
               rows={4}
               className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-              placeholder="Describe the ingredients in 2 lines...&#10;Include preparation method and serving details."
-              required
+              placeholder="Describe the ingredients and preparation method (optional)..."
             />
             <p className="text-sm text-gray-400 mt-1">
-              {formData.ingredients.length}/200 characters (minimum 10 required)
+              {formData.ingredients.length}/200 characters (optional, minimum 3 if provided)
             </p>
           </div>
 
@@ -212,7 +233,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
             {/* Price Field */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Price (₹) *
+                {formData.hasHalfPlate ? "Full Plate Price (₹) *" : "Price (₹) *"}
               </label>
               <input
                 type="number"
@@ -236,14 +257,83 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
                 onChange={(e) => handleInputChange("category", e.target.value)}
                 className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
+                {categoriesLoading ? (
+                  <option value="">Loading categories...</option>
+                ) : (
+                  categories.map((category) => (
+                    <option key={category._id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
+
+          {/* Half Plate Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Half Plate Option
+              </label>
+              <p className="text-sm text-gray-400">
+                Add half plate pricing option to this item
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleInputChange("hasHalfPlate", !formData.hasHalfPlate)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                formData.hasHalfPlate ? "bg-orange-500" : "bg-gray-600"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  formData.hasHalfPlate ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Half Plate Price Field - Only show when toggle is enabled */}
+          {formData.hasHalfPlate && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Half Plate Price (₹) *
+              </label>
+              <input
+                type="number"
+                value={formData.halfPlatePrice}
+                onChange={(e) => handleInputChange("halfPlatePrice", e.target.value)}
+                min="1"
+                step="1"
+                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="e.g., 575"
+                required
+              />
+              <p className="text-sm text-gray-400 mt-1">
+                Should be less than full plate price (₹{formData.price || "0"})
+              </p>
+            </div>
+          )}
+
+          {/* Preview of item to be created */}
+          {formData.name && (
+            <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">Item to be created:</h4>
+              <div className="space-y-1 text-sm text-gray-400">
+                <div className="font-medium text-gray-300">• {formData.name}</div>
+                {formData.hasHalfPlate ? (
+                  <div className="ml-4 space-y-1">
+                    <div>- Full Plate: ₹{formData.price || "0"}</div>
+                    <div>- Half Plate: ₹{formData.halfPlatePrice || "0"}</div>
+                  </div>
+                ) : (
+                  <div className="ml-4">- Price: ₹{formData.price || "0"}</div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Availability Toggle */}
           <div className="flex items-center justify-between">

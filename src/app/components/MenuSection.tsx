@@ -12,6 +12,7 @@ interface MenuItem {
   ingredients: string;
   isVeg: boolean;
   price: number;
+  halfPlatePrice?: number | null;
   category: string;
   isAvailable: boolean;
 }
@@ -68,6 +69,14 @@ const MenuSection: React.FC = () => {
   const handleBuyNow = async (menuItemId: string) => {
     if (!user) {
       window.location.href = '/login';
+      return;
+    }
+    
+    // Check if email is verified before allowing purchase
+    if (!user.isEmailVerified) {
+      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
+        window.location.href = "/verify-email";
+      }
       return;
     }
     
@@ -136,9 +145,26 @@ const MenuSection: React.FC = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <div className="flex flex-col gap-1">
-                          <span className="text-2xl font-bold text-orange-500">
-                            ₹{item.price.toLocaleString('en-IN')}
-                          </span>
+                          {item.halfPlatePrice ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold text-orange-500">
+                                  ₹{item.halfPlatePrice.toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Half</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold text-orange-500">
+                                  ₹{item.price.toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Full</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-2xl font-bold text-orange-500">
+                              ₹{item.price.toLocaleString('en-IN')}
+                            </span>
+                          )}
                           <div className="flex items-center gap-1">
                             <Info className="h-3 w-3 text-gray-400" />
                             <span className="text-xs text-gray-400">Incl. of all taxes</span>
