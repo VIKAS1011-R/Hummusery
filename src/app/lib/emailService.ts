@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { getBaseUrl } from './utils';
 
 // Email configuration
 const transporter = nodemailer.createTransport({
@@ -39,7 +40,7 @@ export const sendOTPEmail = async (
   fallbackToken: string
 ): Promise<boolean> => {
   try {
-    const fallbackUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/verify-email?token=${fallbackToken}`;
+    const fallbackUrl = `${getBaseUrl()}/verify-email?token=${fallbackToken}`;
     
     const mailOptions = {
       from: {
@@ -179,7 +180,7 @@ export const sendWelcomeEmail = async (
             </ul>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/menu" 
+              <a href="${getBaseUrl()}/menu" 
                  style="display: inline-block; background: #f97316; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
                 Start Ordering Now
               </a>
@@ -219,7 +220,7 @@ export const sendWelcomeEmail = async (
         
         Special Welcome Offer: Enjoy free delivery on your first order!
         
-        Start ordering: ${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/menu
+        Start ordering: ${getBaseUrl()}/menu
         
         Need help? Contact us at hummusery1@gmail.com or call 074839 39713
         
@@ -243,7 +244,7 @@ export const sendPasswordResetEmail = async (
   resetToken: string
 ): Promise<boolean> => {
   try {
-    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${getBaseUrl()}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
       from: {

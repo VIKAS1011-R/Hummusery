@@ -129,6 +129,8 @@ Create a `.env.local` file for local development:
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
+**Note:** The application automatically detects the correct URL in production environments (Vercel, Netlify, Railway, etc.). You only need to set `NEXT_PUBLIC_APP_URL` for custom deployments.
+
 For production, set environment variables in your Vercel dashboard.
 
 ## Admin Dashboard
