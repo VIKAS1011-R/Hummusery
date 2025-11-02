@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
 import ToastContainer from './components/ToastContainer';
@@ -12,19 +13,27 @@ export const metadata = {
   description: "Restaurant landing page",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head />
-      <body className="bg-gray-900 text-white antialiased">
+      <body className="antialiased transition-colors">
         <ToastProvider>
           <AuthProvider>
-            <CartProvider>
-              <DatabaseWarmup />
-              {children}
-              <ToastContainer />
-              <ConnectionMonitor />
-            </CartProvider>
+            <ThemeProvider>
+              <CartProvider>
+                <DatabaseWarmup />
+                {children}
+                <ToastContainer />
+                <ConnectionMonitor />
+              </CartProvider>
+            </ThemeProvider>
           </AuthProvider>
         </ToastProvider>
       </body>

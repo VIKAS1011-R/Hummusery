@@ -11,10 +11,12 @@ import {
   Plus,
   UtensilsCrossed,
   ClipboardList,
+
 } from "lucide-react";
 import AddMenuItemForm from "@/app/components/AddMenuItemForm";
 import EditMenuItemForm from "@/app/components/EditMenuItemForm";
 import MenuItemCard from "@/app/components/MenuItemCard";
+
 import { useMongoRealTimeOrders } from "@/app/hooks/useMongoRealTimeOrders";
 import RealTimeStatus from "@/app/components/RealTimeStatus";
 
@@ -260,12 +262,13 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors p-6">
       <div className="max-w-7xl mx-auto">
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-            <p className="text-gray-400 mt-1">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               {activeTab === "orders" ? (
                 <>
                   Total Orders: {orders.length} | Pending:{" "}
@@ -283,7 +286,7 @@ export default function AdminPage() {
           </div>
           <button
             onClick={() => router.push("/")}
-            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             Back to Home
           </button>
@@ -313,15 +316,16 @@ export default function AdminPage() {
             <UtensilsCrossed className="h-4 w-4" />
             Menu Management
           </button>
+
         </div>
 
         {(error || realtimeError) && (
-          <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500 text-red-700 dark:text-red-500 px-4 py-3 rounded-lg mb-6">
             {error || realtimeError}
             {realtimeError && (
               <button
                 onClick={refreshConnection}
-                className="ml-4 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                className="ml-4 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
               >
                 Retry Connection
               </button>
@@ -357,8 +361,8 @@ export default function AdminPage() {
                   onClick={() => setStatusFilter("all")}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     statusFilter === "all"
-                      ? "bg-orange-500 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      ? "bg-orange-600 text-white shadow-sm"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
                   All Orders ({statusCounts.all})
@@ -368,8 +372,8 @@ export default function AdminPage() {
                   onClick={() => setStatusFilter("pending")}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     statusFilter === "pending"
-                      ? "bg-yellow-500 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      ? "bg-amber-500 text-white shadow-sm"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
                   Pending ({statusCounts.pending})
@@ -379,8 +383,8 @@ export default function AdminPage() {
                   onClick={() => setStatusFilter("preparing")}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     statusFilter === "preparing"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      ? "bg-blue-500 text-white shadow-sm"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
                   Preparing ({statusCounts.preparing})
@@ -390,8 +394,8 @@ export default function AdminPage() {
                   onClick={() => setStatusFilter("ready")}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     statusFilter === "ready"
-                      ? "bg-orange-500 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      ? "bg-orange-600 text-white shadow-sm"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
                   Ready ({statusCounts.ready})
@@ -401,8 +405,8 @@ export default function AdminPage() {
                   onClick={() => setStatusFilter("completed")}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     statusFilter === "completed"
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      ? "bg-green-600 text-white shadow-sm"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
                   Completed ({statusCounts.completed})
@@ -412,8 +416,8 @@ export default function AdminPage() {
                   onClick={() => setStatusFilter("cancelled")}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     statusFilter === "cancelled"
-                      ? "bg-red-500 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      ? "bg-red-600 text-white shadow-sm"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
                   Cancelled ({statusCounts.cancelled})
@@ -427,7 +431,7 @@ export default function AdminPage() {
                   onChange={(e) =>
                     setStatusFilter(e.target.value as Order["status"] | "all")
                   }
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="all">All Orders ({statusCounts.all})</option>
                   <option value="pending">
@@ -448,7 +452,7 @@ export default function AdminPage() {
             </div>
 
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-white mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 {statusFilter === "all"
                   ? "All Orders"
                   : `${
@@ -460,7 +464,7 @@ export default function AdminPage() {
 
               {filteredOrders.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-400 text-lg">
+                  <p className="text-gray-600 dark:text-gray-400 text-lg">
                     {statusFilter === "all"
                       ? "No orders found"
                       : `No ${statusFilter} orders found`}
@@ -486,12 +490,12 @@ export default function AdminPage() {
           <div className="space-y-6">
             {/* Add Menu Item Button */}
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Menu Items ({menuItems.length})
               </h2>
               <button
                 onClick={() => setShowAddMenuForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
               >
                 <Plus className="h-4 w-4" />
                 Add Menu Item
@@ -531,7 +535,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Add Menu Item Form Modal */}
+{/* Add Menu Item Form Modal */}
         {showAddMenuForm && (
           <AddMenuItemForm
             onSuccess={handleMenuItemAdded}
@@ -554,3 +558,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+

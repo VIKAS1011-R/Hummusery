@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, Filter, Leaf, Beef, Search, Plus, Minus, ShoppingBag, Info } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
 
@@ -110,19 +111,19 @@ export default function MenuPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-20 pb-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <section className="pt-20 pb-12 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
             Our Menu
           </h1>
-          <p className="text-xl text-gray-300 mb-4 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-4 max-w-2xl mx-auto">
             Discover our authentic Middle Eastern cuisine crafted with the finest ingredients
           </p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400">
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1">
               ✓ All prices include taxes
             </span>
@@ -137,28 +138,28 @@ export default function MenuPage() {
       </section>
 
       {/* Filters Section */}
-      <section className="py-8 bg-gray-800 border-b border-gray-700">
+      <section className="py-8 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-6 items-center">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 h-5 w-5" />
               <input
                 type="text"
                 placeholder="Search menu items..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
 
             {/* Category Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-gray-400" />
+              <Filter className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
@@ -235,12 +236,12 @@ export default function MenuPage() {
                     {items.map((item) => (
                       <div
                         key={item._id}
-                        className="bg-gray-800 rounded-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-2xl border border-gray-700"
+                        className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-2xl border border-gray-200 dark:border-gray-700"
                       >
                         {/* Item Header */}
                         <div className="p-6 pb-4">
                           <div className="flex justify-between items-start mb-3">
-                            <h3 className="text-xl font-bold text-white pr-4">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white pr-4">
                               {item.name}
                             </h3>
                             <div className="flex-shrink-0">
@@ -256,7 +257,7 @@ export default function MenuPage() {
                             </div>
                           </div>
                           
-                          <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                          <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
                             {item.ingredients}
                           </p>
                         </div>
@@ -308,7 +309,7 @@ export default function MenuPage() {
                                   <button 
                                     onClick={() => addToCart(item._id)}
                                     disabled={cartLoading}
-                                    className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
                                   >
                                     {cartLoading ? (
                                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -323,7 +324,7 @@ export default function MenuPage() {
                                 <button 
                                   onClick={() => handleBuyNow(item._id, getCartItemQuantity(item._id) || 1)}
                                   disabled={cartLoading}
-                                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                  className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
                                 >
                                   <ShoppingBag className="h-4 w-4" />
                                   Buy Now

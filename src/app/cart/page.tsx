@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Leaf, Beef, Store } from "
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
 
@@ -147,19 +148,19 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
       
       {/* Header */}
-      <section className="pt-20 pb-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <section className="pt-20 pb-8 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
-            <Link href="/menu" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/menu" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
               <ArrowLeft className="h-6 w-6" />
             </Link>
-            <h1 className="text-4xl font-bold text-white">Your Cart</h1>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Your Cart</h1>
           </div>
-          <p className="text-gray-300">
+          <p className="text-gray-600 dark:text-gray-300">
             {itemCount > 0 ? `${itemCount} item${itemCount > 1 ? 's' : ''} in your cart` : 'Your cart is empty'}
           </p>
         </div>
@@ -295,7 +296,7 @@ export default function CartPage() {
                   <button 
                     onClick={handlePlaceOrder}
                     disabled={placingOrder || loading}
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                   >
                     {placingOrder ? (
                       <>
@@ -334,3 +335,4 @@ export default function CartPage() {
     </div>
   );
 }
+

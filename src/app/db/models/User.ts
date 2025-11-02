@@ -19,6 +19,7 @@ export interface User {
   phone: string;
   password: string;
   role: string;
+  theme?: "light" | "dark";
   orderHistory: OrderHistoryItem[];
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +39,7 @@ export interface UserResponse {
   email: string;
   phone: string;
   role: string;
+  theme?: "light" | "dark";
   orderHistory: OrderHistoryItem[];
   createdAt: Date;
   updatedAt: Date;

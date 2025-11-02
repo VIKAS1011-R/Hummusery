@@ -85,11 +85,11 @@ const MenuSection: React.FC = () => {
   };
 
   return (
-    <section id="menu" className="py-20 bg-gray-800">
+    <section id="menu" className="py-20 bg-white dark:bg-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-4">Our Signature Dishes</h2>
-        <p className="text-center text-gray-400 mb-4 max-w-2xl mx-auto">Handcrafted with love and the finest ingredients</p>
-        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-12">
+        <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-900 dark:text-white mb-4">Our Signature Dishes</h2>
+        <p className="text-center text-gray-600 dark:text-gray-400 mb-4 max-w-2xl mx-auto">Handcrafted with love and the finest ingredients</p>
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-500 mb-12">
           <span>✓ All prices include taxes</span>
           <span>✓ Dine-in restaurant service</span>
         </div>
@@ -112,8 +112,8 @@ const MenuSection: React.FC = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {menuItems.map((item) => (
-                <div key={item._id} className="bg-gray-900 rounded-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-                  <div className="relative text-6xl text-center py-8 bg-gradient-to-br from-orange-500/20 to-gray-800">
+                <div key={item._id} className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-2xl border border-gray-200 dark:border-gray-700">
+                  <div className="relative text-6xl text-center py-8 bg-gradient-to-br from-orange-500/20 to-gray-200 dark:to-gray-800">
                     {getItemEmoji(item)}
                     {/* Veg/Non-Veg Indicator */}
                     <div className="absolute top-4 right-4">
@@ -129,8 +129,8 @@ const MenuSection: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-white mb-2">{item.name}</h3>
-                    <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{item.name}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
                       {item.ingredients.split('\n')[0]}
                     </p>
                     <div className="space-y-3">

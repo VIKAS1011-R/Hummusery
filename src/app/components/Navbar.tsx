@@ -3,10 +3,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChefHat, Settings, LogOut, Shield, ShoppingCart, ClipboardList, UtensilsCrossed } from "lucide-react";
+import { Menu, X, ChefHat, Settings, LogOut, Shield, ShoppingCart, ClipboardList, UtensilsCrossed, Sun, Moon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useCart } from "../context/CartContext";
+import { useTheme } from "../context/ThemeContext";
 import UserDropdown from "./UserDropdown";
 
 const Navbar: React.FC = () => {
@@ -16,6 +17,7 @@ const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const { addToast } = useToast();
   const { itemCount } = useCart();
+  const { theme, toggleTheme } = useTheme();
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ const Navbar: React.FC = () => {
   const closeMenu = () => setIsOpen(false);
 
   const linkClass = (href: string) =>
-    `text-white transition-colors duration-200 ${
+    `text-gray-700 dark:text-white transition-colors duration-200 ${
       pathname === href ? "text-orange-500 font-semibold" : "hover:text-orange-500"
     }`;
 
@@ -54,15 +56,15 @@ const Navbar: React.FC = () => {
       ref={navRef}
       className={`fixed w-full top-0 left-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-gray-900/95 backdrop-blur-sm shadow-lg"
-          : "bg-gray-900/80 backdrop-blur-sm"
+          ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-lg border-b border-gray-200 dark:border-gray-800"
+          : "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center space-x-2 cursor-pointer">
             <ChefHat className="h-8 w-8 text-orange-500" />
-            <span className="text-2xl font-bold text-white">Hummusery</span>
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">Hummusery</span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
@@ -87,9 +89,18 @@ const Navbar: React.FC = () => {
             )}
 
             <div className="flex items-center space-x-3">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-gray-700 dark:text-white hover:text-orange-500 transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+
               {user && (
                 <Link href="/cart" className="relative">
-                  <button className="p-2 text-white hover:text-orange-500 transition-colors">
+                  <button className="p-2 text-gray-700 dark:text-white hover:text-orange-500 transition-colors">
                     <ShoppingCart className="h-6 w-6" />
                     {itemCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
@@ -116,10 +127,19 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="md:hidden flex items-center space-x-3">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-gray-700 dark:text-white hover:text-orange-500 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+
             {/* Menu Button - Always visible for quick access */}
             <Link href="/menu">
               <button 
-                className="p-2 text-white hover:text-orange-500 transition-colors"
+                className="p-2 text-gray-700 dark:text-white hover:text-orange-500 transition-colors"
                 aria-label="View Menu"
               >
                 <UtensilsCrossed className="h-6 w-6" />
@@ -128,7 +148,7 @@ const Navbar: React.FC = () => {
 
             {user && (
               <Link href="/cart" className="relative">
-                <button className="p-2 text-white hover:text-orange-500 transition-colors">
+                <button className="p-2 text-gray-700 dark:text-white hover:text-orange-500 transition-colors">
                   <ShoppingCart className="h-6 w-6" />
                   {itemCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
@@ -141,7 +161,7 @@ const Navbar: React.FC = () => {
             
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-white z-50"
+              className="text-gray-700 dark:text-white z-50"
               aria-label="Toggle menu"
               type="button"
             >
@@ -152,37 +172,37 @@ const Navbar: React.FC = () => {
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-gray-900 border-t border-gray-800">
+        <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
           <div className="px-4 py-4 space-y-2">
             <Link
               href="/"
               onClick={closeMenu}
-              className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg"
+              className="block px-4 py-2 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
             >
               Home
             </Link>
             <Link
               href="/menu"
               onClick={closeMenu}
-              className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg"
+              className="block px-4 py-2 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
             >
               Menu
             </Link>
             <Link
               href="/contact"
               onClick={closeMenu}
-              className="block px-4 py-2 text-white hover:bg-gray-800 rounded-lg"
+              className="block px-4 py-2 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
             >
               Contact Us
             </Link>
 
             {user ? (
-              <div className="border-t border-gray-700 pt-2 mt-2">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 <div className="px-4 py-2 text-orange-500 font-medium">{user.name}</div>
                 <Link href="/orders" className="block">
                   <button
                     onClick={closeMenu}
-                    className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                    className="flex items-center w-full px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
                   >
                     <ClipboardList className="h-4 w-4 mr-3" />
                     Order History
@@ -192,7 +212,7 @@ const Navbar: React.FC = () => {
                   <Link href="/admin" className="block">
                     <button
                       onClick={closeMenu}
-                      className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                      className="flex items-center w-full px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
                     >
                       <Shield className="h-4 w-4 mr-3" />
                       Admin Panel
@@ -202,7 +222,7 @@ const Navbar: React.FC = () => {
                 <Link href="/settings" className="block">
                   <button
                     onClick={closeMenu}
-                    className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                    className="flex items-center w-full px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
                   >
                     <Settings className="h-4 w-4 mr-3" />
                     Settings
@@ -214,7 +234,7 @@ const Navbar: React.FC = () => {
                     addToast('You have been logged out successfully', 'info');
                     await logout();
                   }}
-                  className="flex items-center w-full px-4 py-2 text-gray-300 hover:bg-gray-800 hover:text-red-400 rounded-lg transition-colors duration-200"
+                  className="flex items-center w-full px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 rounded-lg transition-colors duration-200"
                 >
                   <LogOut className="h-4 w-4 mr-3" />
                   Logout

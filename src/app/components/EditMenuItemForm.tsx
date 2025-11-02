@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Save, X, Leaf, Beef, Loader2 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";

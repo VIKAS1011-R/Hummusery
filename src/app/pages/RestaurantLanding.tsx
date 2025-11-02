@@ -8,13 +8,14 @@ import MenuSection from "../components/MenuSection";
 import ContactSection from "../components/ContactSection";
 import Footer from "../components/Footer";
 import DatabaseStatus from "../components/DatabaseStatus";
+
 import { useScrollToSection } from "../hooks/useScrollToSection";
 
 const RestaurantLanding: React.FC = () => {
   // Initialize scroll behavior for hash navigation
   useScrollToSection();
   return (
-    <div className="bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       <Navbar />
       <div className="pt-20">
         <HeroSection />
@@ -24,9 +25,13 @@ const RestaurantLanding: React.FC = () => {
         <Footer />
       </div>
       {/* Database Status Indicator */}
-      <div className="fixed bottom-4 right-4 bg-gray-800 rounded-lg p-3 shadow-lg border border-gray-700">
+      <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg border border-gray-200 dark:border-gray-700">
         <DatabaseStatus />
       </div>
+
+
+      
+
     </div>
   );
 };
