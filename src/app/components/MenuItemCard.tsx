@@ -22,10 +22,10 @@ interface MenuItemCardProps {
 
 export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardProps) {
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition-colors">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors shadow-sm hover:shadow-md">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-semibold text-white pr-4">{item.name}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white pr-4">{item.name}</h3>
         <div className="flex items-center gap-2 flex-shrink-0">
           {item.isVeg ? (
             <div className="flex items-center justify-center w-6 h-6 bg-green-500 rounded border-2 border-green-400 shadow-sm">
@@ -47,7 +47,7 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
       </div>
       
       {/* Ingredients */}
-      <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 leading-relaxed">
         {item.ingredients}
       </p>
       
@@ -60,13 +60,13 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
                 <span className="text-orange-400 font-bold text-sm">
                   ₹{item.halfPlatePrice.toLocaleString('en-IN')}
                 </span>
-                <span className="text-gray-500 text-xs">Half</span>
+                <span className="text-gray-500 dark:text-gray-500 text-xs">Half</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-orange-400 font-bold text-sm">
                   ₹{item.price.toLocaleString('en-IN')}
                 </span>
-                <span className="text-gray-500 text-xs">Full</span>
+                <span className="text-gray-500 dark:text-gray-500 text-xs">Full</span>
               </div>
             </div>
           ) : (
@@ -74,7 +74,7 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
               ₹{item.price.toLocaleString('en-IN')}
             </span>
           )}
-          <p className="text-gray-400 text-sm">{item.category}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{item.category}</p>
         </div>
         
         {/* Action Buttons */}
@@ -82,7 +82,7 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
           {onEdit && (
             <button
               onClick={() => onEdit(item)}
-              className="p-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 hover:text-white transition-colors"
+              className="p-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors"
               title="Edit menu item"
             >
               <Edit className="h-4 w-4" />
@@ -91,7 +91,7 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
           {onDelete && (
             <button
               onClick={() => onDelete(item._id)}
-              className="p-2 bg-gray-700 text-gray-300 rounded hover:bg-red-600 hover:text-white transition-colors"
+              className="p-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-red-600 hover:text-white transition-colors"
               title="Delete menu item"
             >
               <Trash2 className="h-4 w-4" />
@@ -101,8 +101,8 @@ export default function MenuItemCard({ item, onEdit, onDelete }: MenuItemCardPro
       </div>
       
       {/* Metadata */}
-      <div className="mt-4 pt-4 border-t border-gray-700">
-        <p className="text-gray-500 text-xs">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-500 text-xs">
           Added: {new Date(item.createdAt).toLocaleDateString()}
           {item.updatedAt !== item.createdAt && (
             <span className="ml-2">

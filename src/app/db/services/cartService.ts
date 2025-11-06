@@ -67,10 +67,15 @@ export class CartService {
       }
     }
 
-    // Check if item already exists in cart
+    // Check if item already exists in cart with same plate size
     const existingItemIndex = cart.items.findIndex(
-      item => item.menuItemId === addData.menuItemId
+      item => item.menuItemId === addData.menuItemId && item.plateSize === addData.plateSize
     );
+
+    // Determine price based on plate size
+    const itemPrice = addData.plateSize === 'half' && menuItem.halfPlatePrice 
+      ? menuItem.halfPlatePrice 
+      : menuItem.price;
 
     if (existingItemIndex >= 0) {
       // Update existing item quantity
@@ -80,7 +85,8 @@ export class CartService {
       const cartItem: CartItem = {
         menuItemId: menuItem._id,
         name: menuItem.name,
-        price: menuItem.price,
+        price: itemPrice,
+        plateSize: addData.plateSize,
         quantity: addData.quantity,
         isVeg: menuItem.isVeg,
         ingredients: menuItem.ingredients,
@@ -125,11 +131,15 @@ export class CartService {
     }
 
     if (updateData.quantity <= 0) {
-      // Remove item from cart
-      cart.items = cart.items.filter(item => item.menuItemId !== updateData.menuItemId);
+      // Remove item from cart (considering both menuItemId and plateSize)
+      cart.items = cart.items.filter(
+        item => !(item.menuItemId === updateData.menuItemId && item.plateSize === updateData.plateSize)
+      );
     } else {
       // Update item quantity
-      const itemIndex = cart.items.findIndex(item => item.menuItemId === updateData.menuItemId);
+      const itemIndex = cart.items.findIndex(
+        item => item.menuItemId === updateData.menuItemId && item.plateSize === updateData.plateSize
+      );
       if (itemIndex >= 0) {
         cart.items[itemIndex].quantity = updateData.quantity;
       } else {
@@ -154,7 +164,7 @@ export class CartService {
     return this.formatCartResponse(updatedCart);
   }
 
-  static async removeFromCart(userId: string, menuItemId: string): Promise<CartResponse> {
+  static async removeFromCart(userId: string, menuItemId: string, plateSize: 'half' | 'full'): Promise<CartResponse> {
     const db = await connectToDatabase();
     const cartsCollection = db.collection<Cart>(CARTS_COLLECTION);
 
@@ -163,8 +173,10 @@ export class CartService {
       throw new Error("Cart not found");
     }
 
-    // Remove item from cart
-    cart.items = cart.items.filter(item => item.menuItemId !== menuItemId);
+    // Remove item from cart (considering both menuItemId and plateSize)
+    cart.items = cart.items.filter(
+      item => !(item.menuItemId === menuItemId && item.plateSize === plateSize)
+    );
 
     // Recalculate total
     cart.totalAmount = cart.items.reduce(

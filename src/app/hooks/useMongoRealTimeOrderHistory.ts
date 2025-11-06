@@ -159,6 +159,8 @@ export function useMongoRealTimeOrderHistory(initialOrderHistory: OrderHistoryIt
     }
   }, [userId]);
 
+
+  
   // Initialize connection when userId and initial data are available
   useEffect(() => {
     if (userId && initialOrderHistory.length >= 0) {
@@ -181,6 +183,8 @@ export function useMongoRealTimeOrderHistory(initialOrderHistory: OrderHistoryIt
       }
     };
   }, [userId, initialOrderHistory.length, connectToEventSource]);
+
+
 
   const refreshConnection = useCallback(() => {
     console.log('Refreshing real-time connection...');

@@ -63,7 +63,6 @@ export async function PATCH(
 
       // Handle completed orders differently since they get moved to history
       if (body.status === "completed") {
-        console.log("Order completed and moved to history:", orderId);
         // MongoDB Change Streams will automatically detect the deletion
 
         return NextResponse.json({
@@ -74,7 +73,6 @@ export async function PATCH(
         // For non-completed orders, get the updated order
         const updatedOrder = await OrderService.getOrderById(orderId);
         
-        console.log("Order status updated:", orderId, "new status:", body.status);
         // MongoDB Change Streams will automatically detect this change
 
         return NextResponse.json({

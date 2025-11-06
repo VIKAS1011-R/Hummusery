@@ -5,6 +5,7 @@ import { Loader2, Filter, Leaf, Beef, Search, Plus, Minus, ShoppingBag, Info } f
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import PageWrapper from "@/app/components/PageWrapper";
+import PlateSizeModal from "@/app/components/PlateSizeModal";
 
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -29,6 +30,11 @@ export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Modal state
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState<'addToCart' | 'buyNow'>('addToCart');
 
   useEffect(() => {
     fetchMenuItems();
@@ -75,43 +81,76 @@ export default function MenuPage() {
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
-  // Helper function to get cart item quantity
-  const getCartItemQuantity = (menuItemId: string): number => {
-    const cartItem = cartItems.find(item => item.menuItemId === menuItemId);
+  // Helper function to get cart item quantity for a specific plate size
+  const getCartItemQuantity = (menuItemId: string, plateSize: 'half' | 'full'): number => {
+    const cartItem = cartItems.find(item => item.menuItemId === menuItemId && item.plateSize === plateSize);
     return cartItem ? cartItem.quantity : 0;
   };
 
+  // Helper function to get total cart quantity for an item (both half and full)
+  const getTotalCartQuantity = (menuItemId: string): number => {
+    return cartItems
+      .filter(item => item.menuItemId === menuItemId)
+      .reduce((total, item) => total + item.quantity, 0);
+  };
+
+  // Handle opening modal for items with half plate option
+  const handleAddToCart = (item: MenuItem) => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+
+    if (item.halfPlatePrice) {
+      setSelectedItem(item);
+      setModalAction('addToCart');
+      setIsModalOpen(true);
+    } else {
+      // Direct add to cart for items without half plate option
+      addToCart(item._id, 'full', 1);
+    }
+  };
+
   // Handle buy now functionality
-  const handleBuyNow = (menuItemId: string, buyQuantity: number = 1) => {
+  const handleBuyNow = (item: MenuItem) => {
     if (!user) {
       window.location.href = '/login';
       return;
     }
     
-    // Check if email is verified before allowing direct purchase
-    if (!user.isEmailVerified) {
-      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
-        window.location.href = "/verify-email";
-      }
-      return;
+
+
+    if (item.halfPlatePrice) {
+      setSelectedItem(item);
+      setModalAction('buyNow');
+      setIsModalOpen(true);
+    } else {
+      // Direct buy now for items without half plate option
+      window.location.href = `/payment?item=${item._id}&plateSize=full&quantity=1`;
     }
-    
-    // Redirect directly to payment page with the item and quantity
-    window.location.href = `/payment?item=${menuItemId}&quantity=${buyQuantity}`;
+  };
+
+  // Handle modal actions
+  const handleModalAddToCart = async (itemId: string, plateSize: 'half' | 'full', quantity: number) => {
+    await addToCart(itemId, plateSize, quantity);
+  };
+
+  const handleModalBuyNow = (itemId: string, plateSize: 'half' | 'full', quantity: number) => {
+    window.location.href = `/payment?item=${itemId}&plateSize=${plateSize}&quantity=${quantity}`;
   };
 
   // Handle quantity update
-  const handleQuantityChange = async (menuItemId: string, newQuantity: number) => {
+  const handleQuantityChange = async (menuItemId: string, plateSize: 'half' | 'full', newQuantity: number) => {
     if (newQuantity <= 0) {
-      await updateCartItem(menuItemId, 0);
+      await updateCartItem(menuItemId, plateSize, 0);
     } else {
-      await updateCartItem(menuItemId, newQuantity);
+      await updateCartItem(menuItemId, plateSize, newQuantity);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <Navbar />
         <PageWrapper>
           <div className="flex items-center justify-center min-h-screen">
@@ -249,7 +288,7 @@ export default function MenuPage() {
                     {items.map((item) => (
                       <div
                         key={item._id}
-                        className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-2xl border border-gray-200 dark:border-gray-700"
+                        className="bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-2xl border border-gray-200 dark:border-gray-700 shadow-sm"
                       >
                         {/* Item Header */}
                         <div className="p-6 pb-4">
@@ -309,50 +348,78 @@ export default function MenuPage() {
                             
                             {user ? (
                               <div className="space-y-3">
-                                {getCartItemQuantity(item._id) > 0 ? (
-                                  /* Quantity Controls */
-                                  <div className="flex items-center justify-between bg-gray-700 rounded-lg p-2">
-                                    <button
-                                      onClick={() => handleQuantityChange(item._id, getCartItemQuantity(item._id) - 1)}
-                                      disabled={cartLoading}
-                                      className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50"
-                                    >
-                                      <Minus className="h-4 w-4" />
-                                    </button>
-                                    
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-white font-medium">
-                                        {getCartItemQuantity(item._id)} in cart
-                                      </span>
-                                    </div>
-                                    
-                                    <button
-                                      onClick={() => handleQuantityChange(item._id, getCartItemQuantity(item._id) + 1)}
-                                      disabled={cartLoading}
-                                      className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50"
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  /* Add to Cart Button */
-                                  <button 
-                                    onClick={() => addToCart(item._id)}
-                                    disabled={cartLoading}
-                                    className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
-                                  >
-                                    {cartLoading ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Plus className="h-4 w-4" />
+                                {/* Show cart quantities if any exist */}
+                                {getTotalCartQuantity(item._id) > 0 && (
+                                  <div className="space-y-2">
+                                    {item.halfPlatePrice && getCartItemQuantity(item._id, 'half') > 0 && (
+                                      <div className="flex items-center justify-between bg-gray-700 rounded-lg p-2">
+                                        <span className="text-sm text-gray-300">Half Plate</span>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={() => handleQuantityChange(item._id, 'half', getCartItemQuantity(item._id, 'half') - 1)}
+                                            disabled={cartLoading}
+                                            className="p-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-50"
+                                          >
+                                            <Minus className="h-3 w-3" />
+                                          </button>
+                                          <span className="text-white font-medium min-w-[2rem] text-center">
+                                            {getCartItemQuantity(item._id, 'half')}
+                                          </span>
+                                          <button
+                                            onClick={() => handleQuantityChange(item._id, 'half', getCartItemQuantity(item._id, 'half') + 1)}
+                                            disabled={cartLoading}
+                                            className="p-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-50"
+                                          >
+                                            <Plus className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      </div>
                                     )}
-                                    Add to Cart
-                                  </button>
+                                    
+                                    {getCartItemQuantity(item._id, 'full') > 0 && (
+                                      <div className="flex items-center justify-between bg-gray-700 rounded-lg p-2">
+                                        <span className="text-sm text-gray-300">Full Plate</span>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={() => handleQuantityChange(item._id, 'full', getCartItemQuantity(item._id, 'full') - 1)}
+                                            disabled={cartLoading}
+                                            className="p-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-50"
+                                          >
+                                            <Minus className="h-3 w-3" />
+                                          </button>
+                                          <span className="text-white font-medium min-w-[2rem] text-center">
+                                            {getCartItemQuantity(item._id, 'full')}
+                                          </span>
+                                          <button
+                                            onClick={() => handleQuantityChange(item._id, 'full', getCartItemQuantity(item._id, 'full') + 1)}
+                                            disabled={cartLoading}
+                                            className="p-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-50"
+                                          >
+                                            <Plus className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
+                                
+                                {/* Add to Cart Button */}
+                                <button 
+                                  onClick={() => handleAddToCart(item)}
+                                  disabled={cartLoading}
+                                  className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+                                >
+                                  {cartLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Plus className="h-4 w-4" />
+                                  )}
+                                  Add to Cart
+                                </button>
                                 
                                 {/* Buy Now Button */}
                                 <button 
-                                  onClick={() => handleBuyNow(item._id, getCartItemQuantity(item._id) || 1)}
+                                  onClick={() => handleBuyNow(item)}
                                   disabled={cartLoading}
                                   className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
                                 >
@@ -382,6 +449,21 @@ export default function MenuPage() {
 
         <Footer />
       </PageWrapper>
+
+      {/* Plate Size Modal */}
+      {selectedItem && (
+        <PlateSizeModal
+          item={selectedItem}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedItem(null);
+          }}
+          onAddToCart={handleModalAddToCart}
+          onBuyNow={handleModalBuyNow}
+          loading={cartLoading}
+        />
+      )}
     </div>
   );
 }

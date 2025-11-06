@@ -20,13 +20,7 @@ export default function CartPage() {
   const handlePlaceOrder = async () => {
     if (!user || items.length === 0) return;
 
-    // Check if email is verified before allowing payment
-    if (!user.isEmailVerified) {
-      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
-        window.location.href = "/verify-email";
-      }
-      return;
-    }
+
 
     if (!razorpayLoaded) {
       alert("Payment system is loading. Please try again in a moment.");
@@ -47,6 +41,7 @@ export default function CartPage() {
           name: item.name,
           description: item.ingredients,
           isVeg: item.isVeg,
+          plateSize: item.plateSize,
           quantity: item.quantity,
           price: item.price
         })),
@@ -137,14 +132,14 @@ export default function CartPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <Navbar />
         <PageWrapper>
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
               <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-white mb-4">Please Log In</h1>
-              <p className="text-gray-400 mb-6">You need to be logged in to view your cart.</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Please Log In</h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">You need to be logged in to view your cart.</p>
               <Link
                 href="/login"
                 className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
@@ -196,9 +191,9 @@ export default function CartPage() {
           ) : (
             <div className="space-y-6">
               {/* Cart Items */}
-              <div className="bg-gray-800 rounded-lg p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-white">Cart Items</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Cart Items</h2>
                   <button
                     onClick={clearCart}
                     className="text-red-400 hover:text-red-300 transition-colors text-sm"
@@ -208,12 +203,15 @@ export default function CartPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {items.map((item) => (
-                    <div key={item.menuItemId} className="flex items-center gap-4 p-4 bg-gray-700 rounded-lg">
+                  {items.map((item, index) => (
+                    <div key={`${item.menuItemId}-${item.plateSize}-${index}`} className="flex items-center gap-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
                       {/* Item Info */}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-white font-medium">{item.name}</h3>
+                          <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded-full">
+                            {item.plateSize === 'half' ? 'Half Plate' : 'Full Plate'}
+                          </span>
                           {item.isVeg ? (
                             <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded border border-green-400">
                               <Leaf className="h-3 w-3 text-white" />
@@ -233,7 +231,7 @@ export default function CartPage() {
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => updateCartItem(item.menuItemId, item.quantity - 1)}
+                          onClick={() => updateCartItem(item.menuItemId, item.plateSize, item.quantity - 1)}
                           disabled={loading}
                           className="p-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-50"
                         >
@@ -245,7 +243,7 @@ export default function CartPage() {
                         </span>
                         
                         <button
-                          onClick={() => updateCartItem(item.menuItemId, item.quantity + 1)}
+                          onClick={() => updateCartItem(item.menuItemId, item.plateSize, item.quantity + 1)}
                           disabled={loading}
                           className="p-1 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-50"
                         >
@@ -259,7 +257,7 @@ export default function CartPage() {
                           ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                         </p>
                         <button
-                          onClick={() => removeFromCart(item.menuItemId)}
+                          onClick={() => removeFromCart(item.menuItemId, item.plateSize)}
                           disabled={loading}
                           className="text-red-400 hover:text-red-300 transition-colors mt-2 disabled:opacity-50"
                         >
@@ -272,8 +270,8 @@ export default function CartPage() {
               </div>
 
               {/* Order Summary */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h2 className="text-xl font-semibold text-white mb-4">Order Summary</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Order Summary</h2>
                 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-300">
@@ -305,18 +303,7 @@ export default function CartPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {/* Email Verification Notice */}
-                  {!user?.isEmailVerified && (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-                        <Mail className="h-4 w-4" />
-                        <span className="text-sm font-medium">Email verification required for checkout</span>
-                      </div>
-                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                        Verify your email to place orders and receive updates
-                      </p>
-                    </div>
-                  )}
+
                   
                   <button 
                     onClick={handlePlaceOrder}

@@ -7,10 +7,11 @@ import Features from "../components/Features";
 import MenuSection from "../components/MenuSection";
 import ContactSection from "../components/ContactSection";
 import Footer from "../components/Footer";
-import DatabaseStatus from "../components/DatabaseStatus";
+
 import PageWrapper from "../components/PageWrapper";
 
 import { useScrollToSection } from "../hooks/useScrollToSection";
+import DatabaseStatus from "../components/DatabaseStatus";
 
 const RestaurantLanding: React.FC = () => {
   // Initialize scroll behavior for hash navigation
@@ -25,14 +26,13 @@ const RestaurantLanding: React.FC = () => {
         <ContactSection />
         <Footer />
       </PageWrapper>
-      {/* Database Status Indicator */}
-      <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg border border-gray-200 dark:border-gray-700">
-        <DatabaseStatus />
-      </div>
-
-
       
-
+      {/* Database Status Indicator - Development Only */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+          <DatabaseStatus />
+        </div>
+      )}
     </div>
   );
 };

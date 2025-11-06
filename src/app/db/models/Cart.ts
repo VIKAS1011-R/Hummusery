@@ -4,6 +4,7 @@ export interface CartItem {
   menuItemId: string;
   name: string;
   price: number;
+  plateSize: 'half' | 'full';
   quantity: number;
   isVeg: boolean;
   ingredients: string;
@@ -20,11 +21,13 @@ export interface Cart {
 
 export interface AddToCartData {
   menuItemId: string;
+  plateSize: 'half' | 'full';
   quantity: number;
 }
 
 export interface UpdateCartItemData {
   menuItemId: string;
+  plateSize: 'half' | 'full';
   quantity: number;
 }
 

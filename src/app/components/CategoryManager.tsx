@@ -60,20 +60,14 @@ export default function CategoryManager() {
         throw new Error(data.error || "Failed to save category");
       }
 
-      addToast(
-        `Category ${categoryId ? "updated" : "created"} successfully!`,
-        "success"
-      );
+      addToast(`Category ${categoryId ? "updated" : "created"} successfully!`, "success");
       
       setEditingId(null);
       setShowAddForm(false);
       setFormData({ name: "", description: "", isActive: true });
       await refetch();
     } catch (error) {
-      addToast(
-        error instanceof Error ? error.message : "Failed to save category",
-        "error"
-      );
+      addToast(error instanceof Error ? error.message : "Failed to save category", "error");
     } finally {
       setSaving(false);
     }
@@ -99,10 +93,7 @@ export default function CategoryManager() {
       addToast("Category deleted successfully!", "success");
       await refetch();
     } catch (error) {
-      addToast(
-        error instanceof Error ? error.message : "Failed to delete category",
-        "error"
-      );
+      addToast(error instanceof Error ? error.message : "Failed to delete category", "error");
     }
   };
 

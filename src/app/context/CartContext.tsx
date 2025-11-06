@@ -8,6 +8,7 @@ interface CartItem {
   menuItemId: string;
   name: string;
   price: number;
+  plateSize: 'half' | 'full';
   quantity: number;
   isVeg: boolean;
   ingredients: string;
@@ -18,9 +19,9 @@ interface CartContextType {
   totalAmount: number;
   itemCount: number;
   loading: boolean;
-  addToCart: (menuItemId: string, quantity?: number) => Promise<void>;
-  updateCartItem: (menuItemId: string, quantity: number) => Promise<void>;
-  removeFromCart: (menuItemId: string) => Promise<void>;
+  addToCart: (menuItemId: string, plateSize: 'half' | 'full', quantity?: number) => Promise<void>;
+  updateCartItem: (menuItemId: string, plateSize: 'half' | 'full', quantity: number) => Promise<void>;
+  removeFromCart: (menuItemId: string, plateSize: 'half' | 'full') => Promise<void>;
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
 }
@@ -68,7 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addToCart = async (menuItemId: string, quantity: number = 1) => {
+  const addToCart = async (menuItemId: string, plateSize: 'half' | 'full', quantity: number = 1) => {
     if (!user) {
       addToast("Please log in to add items to cart", "error");
       return;
@@ -81,7 +82,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ menuItemId, quantity }),
+        body: JSON.stringify({ menuItemId, plateSize, quantity }),
       });
 
       const data = await response.json();
@@ -102,7 +103,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateCartItem = async (menuItemId: string, quantity: number) => {
+  const updateCartItem = async (menuItemId: string, plateSize: 'half' | 'full', quantity: number) => {
     if (!user) return;
 
     try {
@@ -112,7 +113,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ menuItemId, quantity }),
+        body: JSON.stringify({ menuItemId, plateSize, quantity }),
       });
 
       const data = await response.json();
@@ -132,7 +133,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const removeFromCart = async (menuItemId: string) => {
+  const removeFromCart = async (menuItemId: string, plateSize: 'half' | 'full') => {
     if (!user) return;
 
     try {
@@ -142,7 +143,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ menuItemId, quantity: 0 }),
+        body: JSON.stringify({ menuItemId, plateSize, quantity: 0 }),
       });
 
       const data = await response.json();

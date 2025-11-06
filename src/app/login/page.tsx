@@ -27,10 +27,10 @@ export default function LoginPage() {
   // Don't render the form if auth is loading or user is logged in
   if (authLoading || user) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             {authLoading ? "Checking authentication..." : "Redirecting..."}
           </p>
         </div>
@@ -85,39 +85,39 @@ export default function LoginPage() {
         )}
 
         <label className="block">
-          <span className="text-sm text-gray-300">Email</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-200">Email</span>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
-            className="mt-1 w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
+            className="mt-1 w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 disabled:bg-gray-200 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="you@example.com"
             required
           />
         </label>
 
         <label className="block">
-          <span className="text-sm text-gray-300">Password</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-200">Password</span>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
-            className="mt-1 w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
+            className="mt-1 w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 disabled:bg-gray-200 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="••••••••"
             required
           />
         </label>
 
         <div className="flex items-center justify-between">
-          <label className="inline-flex items-center text-sm text-gray-300">
+          <label className="inline-flex items-center text-sm font-medium text-gray-900 dark:text-gray-200">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
               disabled={loading}
-              className="h-4 w-4 rounded bg-gray-700 text-orange-500 focus:ring-orange-500 disabled:cursor-not-allowed"
+              className="h-4 w-4 rounded bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-orange-500 focus:ring-orange-500 disabled:cursor-not-allowed"
             />
             <span className="ml-2">Remember me</span>
           </label>
@@ -133,7 +133,7 @@ export default function LoginPage() {
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
 
-        <div className="text-center text-sm text-gray-400">
+        <div className="text-center text-sm text-gray-600 dark:text-gray-400">
           Don’t have an account? <a href="/signup" className="text-orange-500 hover:underline">Create one</a>
         </div>
       </form>

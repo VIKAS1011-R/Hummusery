@@ -11,12 +11,14 @@ const CONNECTION_OPTIONS = {
   maxPoolSize: 10, // Maximum number of connections in the pool
   minPoolSize: 3,  // Keep more connections alive
   maxIdleTimeMS: 600000, // 10 minutes idle timeout (much longer to maintain pool)
-  serverSelectionTimeoutMS: 5000, // 5 seconds for server selection
+  serverSelectionTimeoutMS: 10000, // 10 seconds for server selection (increased)
   socketTimeoutMS: 0, // No socket timeout - let MongoDB handle it
   heartbeatFrequencyMS: 30000, // 30 second heartbeats (less aggressive)
-  connectTimeoutMS: 10000, // 10 seconds for initial connection
+  connectTimeoutMS: 20000, // 20 seconds for initial connection (increased)
   retryWrites: true, // Enable retryable writes
   maxConnecting: 2, // Limit concurrent connection attempts
+  bufferMaxEntries: 0, // Disable mongoose buffering
+  bufferCommands: false, // Disable mongoose buffering
 };
 
 // Track last health check to avoid excessive pings
@@ -32,7 +34,6 @@ export async function connectToDatabase(): Promise<Db> {
 
   // If already connecting, wait for that connection with timeout
   if (isConnecting && connectionPromise) {
-    console.log('🔄 Connection in progress, waiting...');
     try {
       return await Promise.race([
         connectionPromise,
@@ -41,7 +42,6 @@ export async function connectToDatabase(): Promise<Db> {
         )
       ]);
     } catch (error) {
-      console.error('Connection wait failed:', error);
       // Reset connection state and try again
       isConnecting = false;
       connectionPromise = null;
@@ -59,7 +59,7 @@ export async function connectToDatabase(): Promise<Db> {
   connectionPromise = Promise.race([
     createConnection(connectionString),
     new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout after 15 seconds')), 15000)
+      setTimeout(() => reject(new Error('Connection timeout after 30 seconds')), 30000)
     )
   ]);
 
@@ -78,20 +78,17 @@ export async function connectToDatabase(): Promise<Db> {
 
 async function createConnection(connectionString: string): Promise<Db> {
   try {
-    console.log('🔌 Establishing new MongoDB connection...');
-    
     // Try with optimized options first
     try {
       client = new MongoClient(connectionString, CONNECTION_OPTIONS);
       await client.connect();
     } catch (configError) {
-      console.warn('⚠️ Optimized connection failed, trying with basic options:', configError);
-      
       // Fallback to basic connection options
       const basicOptions = {
         maxPoolSize: 10,
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
+        connectTimeoutMS: 20000,
       };
       
       client = new MongoClient(connectionString, basicOptions);
@@ -104,15 +101,12 @@ async function createConnection(connectionString: string): Promise<Db> {
     // Verify connection with ping
     await db.admin().ping();
     
-    console.log('✅ Connected to MongoDB database: Hummusery_Data');
-    console.log(`📊 Connection established successfully`);
-    
-    // Set up connection event listeners
+    // Set up connection event listeners for production monitoring
     setupConnectionListeners(client);
     
     return db;
   } catch (error) {
-    console.error('❌ Failed to connect to MongoDB:', error);
+    console.error('Failed to connect to MongoDB:', error);
     
     // Clean up on failure
     if (client) {
@@ -130,35 +124,17 @@ async function createConnection(connectionString: string): Promise<Db> {
 }
 
 function setupConnectionListeners(mongoClient: MongoClient) {
-  mongoClient.on('connectionPoolCreated', () => {
-    console.log('🏊 MongoDB connection pool created');
-  });
-
-  // Only log important pool events, not individual connections
+  // Only log critical events in production
   mongoClient.on('connectionPoolCleared', () => {
-    console.warn('🧹 MongoDB connection pool cleared - this may indicate connection issues');
+    console.warn('MongoDB connection pool cleared - connection issues detected');
   });
 
-  mongoClient.on('connectionPoolClosed', () => {
-    console.log('🏊 MongoDB connection pool closed');
-  });
-
-  // Always log errors and timeouts
   mongoClient.on('error', (error) => {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('MongoDB connection error:', error);
   });
 
   mongoClient.on('timeout', () => {
-    console.warn('⏰ MongoDB connection timeout');
-  });
-
-  // Log server events
-  mongoClient.on('serverOpening', () => {
-    console.log('🌐 MongoDB server connection opening');
-  });
-
-  mongoClient.on('serverClosed', () => {
-    console.log('🌐 MongoDB server connection closed');
+    console.warn('MongoDB connection timeout');
   });
 }
 
@@ -245,7 +221,6 @@ export async function closeDatabaseConnection(): Promise<void> {
   if (client) {
     try {
       await client.close();
-      console.log('🔌 Disconnected from MongoDB');
     } catch (error) {
       console.error('Error closing MongoDB connection:', error);
     } finally {
@@ -257,13 +232,11 @@ export async function closeDatabaseConnection(): Promise<void> {
 
 // Graceful shutdown handler
 process.on('SIGINT', async () => {
-  console.log('🛑 Received SIGINT, closing database connection...');
   await closeDatabaseConnection();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('🛑 Received SIGTERM, closing database connection...');
   await closeDatabaseConnection();
   process.exit(0);
 });

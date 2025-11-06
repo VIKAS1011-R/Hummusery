@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
     }
 
     let userId: string;
-    let isEmailVerified: boolean;
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
         userId: string; 
@@ -46,23 +45,10 @@ export async function POST(request: NextRequest) {
         isEmailVerified: boolean 
       };
       userId = decoded.userId;
-      isEmailVerified = decoded.isEmailVerified;
     } catch (error) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 401 }
-      );
-    }
-
-    // Check if email is verified before allowing payment
-    if (!isEmailVerified) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Email verification required to process payments", 
-          requiresVerification: true 
-        },
-        { status: 403 }
       );
     }
 
@@ -88,9 +74,7 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    console.log("Creating Razorpay order with options:", options);
     const razorpayOrder = await razorpay.orders.create(options);
-    console.log("Razorpay order created successfully:", razorpayOrder.id);
 
     return NextResponse.json({
       success: true,

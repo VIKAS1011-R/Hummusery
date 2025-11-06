@@ -135,6 +135,8 @@ export function useMongoRealTimeOrders(initialOrders: Order[] = []) {
     }
   }, []);
 
+
+  
   // Initialize connection after initial data is loaded
   useEffect(() => {
     if (initialOrders.length >= 0) { // Even empty array counts as initial data
@@ -157,6 +159,8 @@ export function useMongoRealTimeOrders(initialOrders: Order[] = []) {
       }
     };
   }, [initialOrders.length, connectToEventSource]);
+
+
 
   const refreshConnection = useCallback(() => {
     console.log('Refreshing real-time connection...');

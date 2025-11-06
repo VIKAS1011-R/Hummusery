@@ -59,9 +59,9 @@ const MenuSection: React.FC = () => {
     return item.isVeg ? "🌱" : "🍖";
   };
 
-  // Helper function to get cart item quantity
+  // Helper function to get cart item quantity (for full plate only in this simplified view)
   const getCartItemQuantity = (menuItemId: string): number => {
-    const cartItem = cartItems.find(item => item.menuItemId === menuItemId);
+    const cartItem = cartItems.find(item => item.menuItemId === menuItemId && item.plateSize === 'full');
     return cartItem ? cartItem.quantity : 0;
   };
 
@@ -72,24 +72,18 @@ const MenuSection: React.FC = () => {
       return;
     }
     
-    // Check if email is verified before allowing purchase
-    if (!user.isEmailVerified) {
-      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
-        window.location.href = "/verify-email";
-      }
-      return;
-    }
+
     
-    await addToCart(menuItemId, 1);
+    await addToCart(menuItemId, 'full', 1);
     window.location.href = '/cart';
   };
 
   // Handle quantity update
   const handleQuantityChange = async (menuItemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      await updateCartItem(menuItemId, 0);
+      await updateCartItem(menuItemId, 'full', 0);
     } else {
-      await updateCartItem(menuItemId, newQuantity);
+      await updateCartItem(menuItemId, 'full', newQuantity);
     }
   };
 
@@ -200,7 +194,7 @@ const MenuSection: React.FC = () => {
                           ) : (
                             /* Add to Cart Button */
                             <button 
-                              onClick={() => addToCart(item._id)}
+                              onClick={() => addToCart(item._id, 'full', 1)}
                               disabled={cartLoading}
                               className="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
                             >

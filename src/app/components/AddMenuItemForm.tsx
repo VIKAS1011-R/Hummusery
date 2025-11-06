@@ -140,12 +140,12 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Add New Menu Item</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Menu Item</h2>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
@@ -160,14 +160,14 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Item Name *
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="e.g., Classic Hummus Bowl"
               required
             />
@@ -175,24 +175,24 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
 
           {/* Ingredients Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Ingredients Description (Optional)
             </label>
             <textarea
               value={formData.ingredients}
               onChange={(e) => handleInputChange("ingredients", e.target.value)}
               rows={4}
-              className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+              className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="Describe the ingredients and preparation method (optional)..."
             />
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {formData.ingredients.length}/200 characters (optional, minimum 3 if provided)
             </p>
           </div>
 
           {/* Veg/Non-Veg Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Food Type *
             </label>
             <div className="flex gap-4">
@@ -202,7 +202,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
                 className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-colors ${
                   formData.isVeg
                     ? "border-green-500 bg-green-500/10 text-green-400"
-                    : "border-gray-600 bg-gray-700 text-gray-300 hover:border-green-500"
+                    : "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-green-500"
                 }`}
               >
                 <div className="flex items-center justify-center w-6 h-6 bg-green-500 rounded border-2 border-green-400">
@@ -217,7 +217,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
                 className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-colors ${
                   !formData.isVeg
                     ? "border-red-500 bg-red-500/10 text-red-400"
-                    : "border-gray-600 bg-gray-700 text-gray-300 hover:border-red-500"
+                    : "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-red-500"
                 }`}
               >
                 <div className="flex items-center justify-center w-6 h-6 bg-red-500 rounded border-2 border-red-400">
@@ -232,7 +232,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Price Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {formData.hasHalfPlate ? "Full Plate Price (₹) *" : "Price (₹) *"}
               </label>
               <input
@@ -241,7 +241,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
                 onChange={(e) => handleInputChange("price", e.target.value)}
                 min="1"
                 step="1"
-                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="e.g., 975"
                 required
               />
@@ -249,13 +249,13 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
 
             {/* Category Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => handleInputChange("category", e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 {categoriesLoading ? (
                   <option value="">Loading categories...</option>
@@ -273,10 +273,10 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
           {/* Half Plate Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Half Plate Option
               </label>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Add half plate pricing option to this item
               </p>
             </div>
@@ -298,7 +298,7 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
           {/* Half Plate Price Field - Only show when toggle is enabled */}
           {formData.hasHalfPlate && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Half Plate Price (₹) *
               </label>
               <input
@@ -307,11 +307,11 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
                 onChange={(e) => handleInputChange("halfPlatePrice", e.target.value)}
                 min="1"
                 step="1"
-                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="e.g., 575"
                 required
               />
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Should be less than full plate price (₹{formData.price || "0"})
               </p>
             </div>
@@ -319,10 +319,10 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
 
           {/* Preview of item to be created */}
           {formData.name && (
-            <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-300 mb-2">Item to be created:</h4>
-              <div className="space-y-1 text-sm text-gray-400">
-                <div className="font-medium text-gray-300">• {formData.name}</div>
+            <div className="bg-gray-100 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg p-4 shadow-sm">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Item to be created:</h4>
+              <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                <div className="font-medium text-gray-800 dark:text-gray-300">• {formData.name}</div>
                 {formData.hasHalfPlate ? (
                   <div className="ml-4 space-y-1">
                     <div>- Full Plate: ₹{formData.price || "0"}</div>
@@ -338,10 +338,10 @@ export default function AddMenuItemForm({ onSuccess, onCancel }: AddMenuItemForm
           {/* Availability Toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Availability
               </label>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Make this item available to customers
               </p>
             </div>

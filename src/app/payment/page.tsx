@@ -32,6 +32,7 @@ function PaymentPageContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const itemId = searchParams.get("item");
+  const plateSize = (searchParams.get("plateSize") as 'half' | 'full') || 'full';
   const initialQuantity = parseInt(searchParams.get("quantity") || "1");
 
   const [menuItem, setMenuItem] = useState<MenuItem | null>(null);
@@ -77,13 +78,7 @@ function PaymentPageContent() {
   const handlePlaceOrder = async () => {
     if (!user || !menuItem) return;
 
-    // Check if email is verified before allowing payment
-    if (!user.isEmailVerified) {
-      if (confirm("You need to verify your email before placing an order. Would you like to verify now?")) {
-        window.location.href = "/verify-email";
-      }
-      return;
-    }
+
 
     if (!razorpayLoaded) {
       alert("Payment system is loading. Please try again in a moment.");
@@ -96,8 +91,13 @@ function PaymentPageContent() {
       // Generate random 4-digit order number
       const orderNumber = Math.floor(1000 + Math.random() * 9000).toString();
 
+      // Calculate price based on plate size
+      const itemPrice = plateSize === 'half' && menuItem.halfPlatePrice 
+        ? menuItem.halfPlatePrice 
+        : menuItem.price;
+      
       // Calculate total amount
-      const totalAmount = menuItem.price * quantity;
+      const totalAmount = itemPrice * quantity;
 
       // Prepare order data for single item
       const orderData = {
@@ -108,8 +108,9 @@ function PaymentPageContent() {
             name: menuItem.name,
             description: menuItem.ingredients,
             isVeg: menuItem.isVeg,
+            plateSize: plateSize,
             quantity: quantity,
-            price: menuItem.price,
+            price: itemPrice,
           },
         ],
         status: "pending" as const,
@@ -210,15 +211,15 @@ function PaymentPageContent() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <Navbar />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Store className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Please Log In
             </h1>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               You need to be logged in to make a payment.
             </p>
             <Link
@@ -235,7 +236,7 @@ function PaymentPageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <Navbar />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -246,12 +247,12 @@ function PaymentPageContent() {
 
   if (error || !menuItem) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <Navbar />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Error</h1>
-            <p className="text-gray-400 mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Error</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               {error || "Menu item not found"}
             </p>
             <Link
@@ -266,7 +267,11 @@ function PaymentPageContent() {
     );
   }
 
-  const totalAmount = menuItem.price * quantity;
+  // Calculate price and total based on plate size
+  const itemPrice = plateSize === 'half' && menuItem.halfPlatePrice 
+    ? menuItem.halfPlatePrice 
+    : menuItem.price;
+  const totalAmount = itemPrice * quantity;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
@@ -293,16 +298,19 @@ function PaymentPageContent() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-6">
             {/* Item Details */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Order Details
               </h2>
 
-              <div className="flex items-center gap-4 p-4 bg-gray-700 rounded-lg">
+              <div className="flex items-center gap-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
                 {/* Item Info */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-white font-medium">{menuItem.name}</h3>
+                    <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded-full">
+                      {plateSize === 'half' ? 'Half Plate' : 'Full Plate'}
+                    </span>
                     {menuItem.isVeg ? (
                       <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded border border-green-400">
                         <Leaf className="h-3 w-3 text-white" />
@@ -317,7 +325,7 @@ function PaymentPageContent() {
                     {menuItem.ingredients}
                   </p>
                   <p className="text-orange-400 font-semibold mt-2">
-                    ₹{menuItem.price.toLocaleString("en-IN")} each
+                    ₹{itemPrice.toLocaleString("en-IN")} each
                   </p>
                 </div>
 
@@ -348,8 +356,8 @@ function PaymentPageContent() {
             </div>
 
             {/* Payment Summary */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Payment Summary
               </h2>
 
@@ -357,7 +365,7 @@ function PaymentPageContent() {
                 <div className="flex justify-between text-gray-300">
                   <span>
                     Item Total ({quantity} × ₹
-                    {menuItem.price.toLocaleString("en-IN")})
+                    {itemPrice.toLocaleString("en-IN")})
                   </span>
                   <span>₹{totalAmount.toLocaleString("en-IN")}</span>
                 </div>
@@ -432,7 +440,7 @@ export default function PaymentPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
           <Navbar />
           <div className="pt-20 flex items-center justify-center min-h-screen">
             <Loader2 className="h-8 w-8 animate-spin text-orange-500" />

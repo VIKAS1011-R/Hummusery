@@ -24,38 +24,39 @@ interface OrderData {
   paymentStatus?: "pending" | "completed" | "failed";
 }
 
-// Background retry function
-async function scheduleBackgroundRetry(orderData: OrderData, paymentId: string, razorpayOrderId: string) {
-  // In a production environment, you would use a job queue like Bull, Agenda, or similar
-  // For now, we'll do a simple background retry with setTimeout
-  
-  console.log("Scheduling background retry for order creation...");
-  
+// Background retry function for production
+async function scheduleBackgroundRetry(
+  orderData: OrderData,
+  paymentId: string,
+  razorpayOrderId: string
+) {
+  // In production, consider using a proper job queue like Bull, Agenda, or similar
   setTimeout(async () => {
     try {
-      console.log("Background retry: Attempting to create order...");
-      const newOrder = await OrderService.createOrder(orderData);
-      console.log("Background retry: Order created successfully!", newOrder._id);
+      await OrderService.createOrder(orderData);
     } catch (error) {
       console.error("Background retry failed:", error);
-      
-      // Schedule another retry after 5 minutes
+
+      // Schedule final retry after 5 minutes
       setTimeout(async () => {
         try {
-          console.log("Final background retry: Attempting to create order...");
-          const newOrder = await OrderService.createOrder(orderData);
-          console.log("Final background retry: Order created successfully!", newOrder._id);
+          await OrderService.createOrder(orderData);
         } catch (finalError) {
-          console.error("FINAL RETRY FAILED - Manual intervention required:", {
-            paymentId,
-            razorpayOrderId,
-            error: finalError instanceof Error ? finalError.message : 'Unknown error',
-            orderData: JSON.stringify(orderData)
-          });
+          console.error(
+            "CRITICAL: Final retry failed - manual intervention required:",
+            {
+              paymentId,
+              razorpayOrderId,
+              error:
+                finalError instanceof Error
+                  ? finalError.message
+                  : "Unknown error",
+            }
+          );
         }
-      }, 5 * 60 * 1000); // 5 minutes
+      }, 5 * 60 * 1000);
     }
-  }, 30 * 1000); // 30 seconds initial delay
+  }, 30 * 1000);
 }
 
 export async function POST(request: NextRequest) {
@@ -70,17 +71,13 @@ export async function POST(request: NextRequest) {
     }
 
     let userId: string;
-    let userEmail: string;
-    let isEmailVerified: boolean;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { 
-        userId: string; 
-        email: string; 
-        isEmailVerified: boolean 
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        userId: string;
+        email: string;
+        isEmailVerified: boolean;
       };
       userId = decoded.userId;
-      userEmail = decoded.email;
-      isEmailVerified = decoded.isEmailVerified;
     } catch (error) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
@@ -88,24 +85,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email is verified before processing payment verification
-    if (!isEmailVerified) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Email verification required to complete payment", 
-          requiresVerification: true 
-        },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
-    const { 
-      razorpay_order_id, 
-      razorpay_payment_id, 
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
       razorpay_signature,
-      orderData // The actual order data (items, etc.)
+      orderData, // The actual order data (items, etc.)
     } = body;
 
     // Validate required fields
@@ -137,7 +122,7 @@ export async function POST(request: NextRequest) {
         status: "pending" as const,
         paymentId: razorpay_payment_id,
         razorpayOrderId: razorpay_order_id,
-        paymentStatus: "completed"
+        paymentStatus: "completed",
       };
 
       // Retry mechanism for database operations
@@ -147,66 +132,66 @@ export async function POST(request: NextRequest) {
 
       while (retryCount < maxRetries) {
         try {
-          console.log(`Attempting to create order in database (attempt ${retryCount + 1}/${maxRetries})`);
-          
           const newOrder = await OrderService.createOrder(orderToCreate);
-          
-          console.log("Order created successfully in database:", newOrder._id);
+
           // MongoDB Change Streams will automatically detect this insertion
-          
+
           return NextResponse.json({
             success: true,
             message: "Payment verified and order created successfully",
             order: newOrder,
-            paymentId: razorpay_payment_id
+            paymentId: razorpay_payment_id,
           });
-          
         } catch (error) {
           lastError = error;
           retryCount++;
-          
-          console.error(`Database operation failed (attempt ${retryCount}/${maxRetries}):`, {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            paymentId: razorpay_payment_id,
-            orderId: razorpay_order_id,
-            userId
-          });
-          
+
+          console.error(
+            `Database operation failed (attempt ${retryCount}/${maxRetries}):`,
+            error instanceof Error ? error.message : "Unknown error"
+          );
+
           if (retryCount < maxRetries) {
             // Wait before retrying (exponential backoff)
             const waitTime = Math.pow(2, retryCount) * 1000; // 2s, 4s, 8s
-            console.log(`Waiting ${waitTime}ms before retry...`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
           }
         }
       }
 
       // All retries failed - log critical error but still return success for payment
-      console.error("CRITICAL: Payment verified but order creation failed after all retries!", {
-        paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id,
-        userId,
-        finalError: lastError instanceof Error ? lastError.message : 'Unknown error',
-        orderData: JSON.stringify(orderToCreate)
-      });
+      console.error(
+        "CRITICAL: Payment verified but order creation failed after all retries!",
+        {
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          userId,
+          finalError:
+            lastError instanceof Error ? lastError.message : "Unknown error",
+          orderData: JSON.stringify(orderToCreate),
+        }
+      );
 
       // Schedule background retry (you could implement a job queue here)
-      scheduleBackgroundRetry(orderToCreate, razorpay_payment_id, razorpay_order_id);
-      
+      scheduleBackgroundRetry(
+        orderToCreate,
+        razorpay_payment_id,
+        razorpay_order_id
+      );
+
       return NextResponse.json({
         success: true,
         message: "Payment verified successfully - Order will be processed",
         paymentId: razorpay_payment_id,
-        warning: "Order processing in progress"
+        warning: "Order processing in progress",
       });
     }
 
     return NextResponse.json({
       success: true,
       message: "Payment verified successfully",
-      paymentId: razorpay_payment_id
+      paymentId: razorpay_payment_id,
     });
-
   } catch (error) {
     console.error("Error verifying payment:", error);
     return NextResponse.json(

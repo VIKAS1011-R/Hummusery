@@ -12,6 +12,7 @@ import {
   UtensilsCrossed,
   ClipboardList,
   Tags,
+  Search,
 } from "lucide-react";
 import AddMenuItemForm from "@/app/components/AddMenuItemForm";
 import EditMenuItemForm from "@/app/components/EditMenuItemForm";
@@ -72,12 +73,21 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<Order["status"] | "all">(
     "all"
   );
-  const [activeTab, setActiveTab] = useState<"orders" | "menu" | "categories">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "menu" | "categories">(() => {
+    // Initialize from localStorage if available, otherwise default to "orders"
+    if (typeof window !== "undefined") {
+      const savedTab = localStorage.getItem("adminActiveTab") as "orders" | "menu" | "categories";
+      return savedTab && ["orders", "menu", "categories"].includes(savedTab) ? savedTab : "orders";
+    }
+    return "orders";
+  });
   const [showAddMenuForm, setShowAddMenuForm] = useState(false);
   const [showEditMenuForm, setShowEditMenuForm] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
+  const [selectedMenuCategory, setSelectedMenuCategory] = useState<string>("all");
+  const [menuSearchQuery, setMenuSearchQuery] = useState("");
 
   useEffect(() => {
     // Don't do anything while auth is loading
@@ -103,7 +113,9 @@ export default function AdminPage() {
     if (activeTab === "menu") {
       fetchMenuItems();
     }
-  }, [user, authLoading, router, activeTab, addToast]);
+  }, [user, authLoading, router, activeTab]);
+
+
 
   const fetchOrders = async () => {
     try {
@@ -223,6 +235,12 @@ export default function AdminPage() {
   const handleTabChange = (tab: "orders" | "menu" | "categories") => {
     setActiveTab(tab);
     setError(null);
+    
+    // Save the active tab to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("adminActiveTab", tab);
+    }
+    
     if (tab === "menu" && menuItems.length === 0) {
       fetchMenuItems();
     }
@@ -251,10 +269,10 @@ export default function AdminPage() {
   // Show loading while auth is being checked or data is being fetched
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-4" />
-          <p className="text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             {authLoading
               ? "Checking authentication..."
               : "Loading admin dashboard..."}
@@ -306,7 +324,7 @@ export default function AdminPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === "orders"
                 ? "bg-orange-500 text-white"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
           >
             <ClipboardList className="h-4 w-4" />
@@ -317,7 +335,7 @@ export default function AdminPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === "menu"
                 ? "bg-orange-500 text-white"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
           >
             <UtensilsCrossed className="h-4 w-4" />
@@ -328,7 +346,7 @@ export default function AdminPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === "categories"
                 ? "bg-orange-500 text-white"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
           >
             <Tags className="h-4 w-4" />
@@ -506,8 +524,8 @@ export default function AdminPage() {
         {/* Menu Management Tab */}
         {activeTab === "menu" && (
           <div className="space-y-6">
-            {/* Add Menu Item Button */}
-            <div className="flex justify-between items-center">
+            {/* Header with Add Button */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Menu Items ({menuItems.length})
               </h2>
@@ -520,7 +538,116 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Menu Items Grid */}
+            {/* Quick Stats */}
+            {menuItems.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {menuItems.filter(item => item.isAvailable).length}
+                  </div>
+                  <div className="text-sm text-blue-600 dark:text-blue-400">Available</div>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                    {menuItems.filter(item => !item.isAvailable).length}
+                  </div>
+                  <div className="text-sm text-red-600 dark:text-red-400">Unavailable</div>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {menuItems.filter(item => item.isVeg).length}
+                  </div>
+                  <div className="text-sm text-green-600 dark:text-green-400">Vegetarian</div>
+                </div>
+                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {Array.from(new Set(menuItems.map(item => item.category))).length}
+                  </div>
+                  <div className="text-sm text-orange-600 dark:text-orange-400">Categories</div>
+                </div>
+              </div>
+            )}
+
+            {/* Search and Filter Section */}
+            {menuItems.length > 0 && (
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+                <div className="flex flex-col lg:flex-row gap-4 items-center">
+                  {/* Search */}
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 h-5 w-5" />
+                    <input
+                      type="text"
+                      placeholder="Search menu items..."
+                      value={menuSearchQuery}
+                      onChange={(e) => setMenuSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Category Filter */}
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <select
+                      value={selectedMenuCategory}
+                      onChange={(e) => setSelectedMenuCategory(e.target.value)}
+                      className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value="all">All Categories</option>
+                      {Array.from(new Set(menuItems.map(item => item.category))).map(category => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Clear Filters */}
+                  {(menuSearchQuery || selectedMenuCategory !== "all") && (
+                    <button
+                      onClick={() => {
+                        setMenuSearchQuery("");
+                        setSelectedMenuCategory("all");
+                      }}
+                      className="px-3 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick Category Navigation */}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedMenuCategory("all")}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                      selectedMenuCategory === "all"
+                        ? "bg-orange-500 text-white"
+                        : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
+                    }`}
+                  >
+                    All ({menuItems.length})
+                  </button>
+                  {Array.from(new Set(menuItems.map(item => item.category))).map(category => {
+                    const count = menuItems.filter(item => item.category === category).length;
+                    return (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedMenuCategory(category)}
+                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                          selectedMenuCategory === category
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
+                        }`}
+                      >
+                        {category} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Menu Items by Category */}
             {menuLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -539,16 +666,85 @@ export default function AdminPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {menuItems.map((item) => (
-                  <MenuItemCard
-                    key={item._id}
-                    item={item}
-                    onEdit={handleEditMenuItem}
-                    onDelete={handleDeleteMenuItem}
-                  />
-                ))}
-              </div>
+              (() => {
+                // Filter menu items based on search and category
+                const filteredMenuItems = menuItems.filter(item => {
+                  const matchesCategory = selectedMenuCategory === "all" || item.category === selectedMenuCategory;
+                  const matchesSearch = menuSearchQuery === "" || 
+                    item.name.toLowerCase().includes(menuSearchQuery.toLowerCase()) ||
+                    item.ingredients.toLowerCase().includes(menuSearchQuery.toLowerCase()) ||
+                    item.category.toLowerCase().includes(menuSearchQuery.toLowerCase());
+                  
+                  return matchesCategory && matchesSearch;
+                });
+
+                // Group filtered items by category
+                const groupedFilteredItems = filteredMenuItems.reduce((acc, item) => {
+                  if (!acc[item.category]) {
+                    acc[item.category] = [];
+                  }
+                  acc[item.category].push(item);
+                  return acc;
+                }, {} as Record<string, MenuItem[]>);
+
+                if (filteredMenuItems.length === 0) {
+                  return (
+                    <div className="text-center py-12">
+                      <UtensilsCrossed className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-400 text-lg mb-2">
+                        No menu items match your filters
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Try adjusting your search or category filter
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-6">
+                    {/* Results Summary */}
+                    {(menuSearchQuery || selectedMenuCategory !== "all") && (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <p className="text-blue-800 dark:text-blue-200 text-sm">
+                          Showing {filteredMenuItems.length} of {menuItems.length} menu items
+                          {menuSearchQuery && ` matching "${menuSearchQuery}"`}
+                          {selectedMenuCategory !== "all" && ` in "${selectedMenuCategory}" category`}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Categories */}
+                    <div className="space-y-8">
+                      {Object.entries(groupedFilteredItems).map(([category, items]) => (
+                      <div key={category} className="space-y-4">
+                        {/* Category Header */}
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {category}
+                          </h3>
+                          <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium">
+                            {items.length} item{items.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        
+                        {/* Category Items Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {items.map((item) => (
+                            <MenuItemCard
+                              key={item._id}
+                              item={item}
+                              onEdit={handleEditMenuItem}
+                              onDelete={handleDeleteMenuItem}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    </div>
+                  </div>
+                );
+              })()
             )}
           </div>
         )}

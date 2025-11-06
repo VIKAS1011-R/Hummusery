@@ -1,63 +1,103 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Database, CheckCircle, XCircle, Loader } from 'lucide-react';
+import { useEffect, useState } from "react";
 
-interface DbStatus {
-  status: 'success' | 'error';
-  message: string;
-  connected: boolean;
+interface DatabaseStatusProps {
+  className?: string;
 }
 
-const DatabaseStatus: React.FC = () => {
-  const [dbStatus, setDbStatus] = useState<DbStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function DatabaseStatus({
+  className = "",
+}: DatabaseStatusProps) {
+  const [status, setStatus] = useState<
+    "checking" | "connected" | "disconnected"
+  >("checking");
+  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+
+  const checkDatabaseStatus = async () => {
+    try {
+      const response = await fetch("/api/health", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        setStatus("connected");
+      } else {
+        setStatus("disconnected");
+      }
+    } catch (error) {
+      setStatus("disconnected");
+    }
+    setLastCheck(new Date());
+  };
 
   useEffect(() => {
-    const checkDbStatus = async () => {
-      try {
-        const response = await fetch('/api/db-status');
-        const data = await response.json();
-        setDbStatus(data);
-      } catch (error) {
-        setDbStatus({
-          status: 'error',
-          message: 'Failed to check database connection',
-          connected: false
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Only run in development mode
+    if (process.env.NODE_ENV !== "development") {
+      return;
+    }
 
-    checkDbStatus();
+    // Check status on mount
+    checkDatabaseStatus();
+
+    // Check status every 30 seconds
+    const interval = setInterval(checkDatabaseStatus, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 text-gray-400">
-        <Loader className="w-4 h-4 animate-spin" />
-        <span className="text-sm">Checking database connection...</span>
-      </div>
-    );
+  // Only show in development mode
+  if (process.env.NODE_ENV !== "development") {
+    return null;
   }
 
+  const getStatusColor = () => {
+    switch (status) {
+      case "connected":
+        return "text-green-600 dark:text-green-400";
+      case "disconnected":
+        return "text-red-600 dark:text-red-400";
+      default:
+        return "text-yellow-600 dark:text-yellow-400";
+    }
+  };
+
+  const getStatusIcon = () => {
+    switch (status) {
+      case "connected":
+        return "●";
+      case "disconnected":
+        return "●";
+      default:
+        return "●";
+    }
+  };
+
+  const getStatusText = () => {
+    switch (status) {
+      case "connected":
+        return "DB Connected";
+      case "disconnected":
+        return "DB Disconnected";
+      default:
+        return "Checking DB...";
+    }
+  };
+
   return (
-    <div className="flex items-center gap-2">
-      <Database className="w-4 h-4 text-gray-400" />
-      {dbStatus?.connected ? (
-        <div className="flex items-center gap-1 text-green-400">
-          <CheckCircle className="w-4 h-4" />
-          <span className="text-sm">Database Connected</span>
-        </div>
-      ) : (
-        <div className="flex items-center gap-1 text-red-400">
-          <XCircle className="w-4 h-4" />
-          <span className="text-sm">Database Disconnected</span>
-        </div>
+    <div className={`flex items-center space-x-2 text-sm ${className}`}>
+      <span className={`${getStatusColor()} animate-pulse`}>
+        {getStatusIcon()}
+      </span>
+      <span className="text-gray-700 dark:text-gray-300">
+        {getStatusText()}
+      </span>
+      {lastCheck && (
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {lastCheck.toLocaleTimeString()}
+        </span>
       )}
     </div>
   );
-};
-
-export default DatabaseStatus;
+}

@@ -70,16 +70,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { menuItemId, quantity } = body;
+    const { menuItemId, plateSize, quantity } = body;
 
-    if (!menuItemId || !quantity || quantity <= 0) {
+    if (!menuItemId || !plateSize || !quantity || quantity <= 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid menu item ID or quantity" },
+        { success: false, error: "Invalid menu item ID, plate size, or quantity" },
         { status: 400 }
       );
     }
 
-    const cart = await CartService.addToCart(userId, { menuItemId, quantity });
+    if (plateSize !== 'half' && plateSize !== 'full') {
+      return NextResponse.json(
+        { success: false, error: "Invalid plate size. Must be 'half' or 'full'" },
+        { status: 400 }
+      );
+    }
+
+    const cart = await CartService.addToCart(userId, { menuItemId, plateSize, quantity });
 
     return NextResponse.json({
       success: true,
@@ -124,16 +131,23 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { menuItemId, quantity } = body;
+    const { menuItemId, plateSize, quantity } = body;
 
-    if (!menuItemId || quantity < 0) {
+    if (!menuItemId || !plateSize || quantity < 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid menu item ID or quantity" },
+        { success: false, error: "Invalid menu item ID, plate size, or quantity" },
         { status: 400 }
       );
     }
 
-    const cart = await CartService.updateCartItem(userId, { menuItemId, quantity });
+    if (plateSize !== 'half' && plateSize !== 'full') {
+      return NextResponse.json(
+        { success: false, error: "Invalid plate size. Must be 'half' or 'full'" },
+        { status: 400 }
+      );
+    }
+
+    const cart = await CartService.updateCartItem(userId, { menuItemId, plateSize, quantity });
 
     return NextResponse.json({
       success: true,
