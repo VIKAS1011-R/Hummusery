@@ -1,6 +1,7 @@
 import { connectToDatabase } from "../connection";
 import { User, CreateUserData, UserResponse, OrderHistoryItem } from "../models/User";
 import bcrypt from "bcryptjs";
+import { ObjectId } from "mongodb";
 
 const USERS_COLLECTION = "users";
 
@@ -90,7 +91,7 @@ export class UserService {
     }
   ): Promise<void> {
     const db = await connectToDatabase();
-    const usersCollection = db.collection<User>(USERS_COLLECTION);
+    const usersCollection = db.collection(USERS_COLLECTION);
 
     const orderHistoryItem = {
       ...orderData,
@@ -98,9 +99,11 @@ export class UserService {
     };
 
     await usersCollection.updateOne(
-      { _id: userId },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { _id: new ObjectId(userId) } as any,
       {
-        $push: { orderHistory: orderHistoryItem },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        $push: { orderHistory: orderHistoryItem } as any,
         $set: { updatedAt: new Date() }
       }
     );
@@ -108,14 +111,15 @@ export class UserService {
 
   static async getUserOrderHistory(userId: string): Promise<OrderHistoryItem[]> {
     const db = await connectToDatabase();
-    const usersCollection = db.collection<User>(USERS_COLLECTION);
+    const usersCollection = db.collection(USERS_COLLECTION);
 
     const user = await usersCollection.findOne(
-      { _id: userId },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { _id: new ObjectId(userId) } as any,
       { projection: { orderHistory: 1 } }
     );
 
-    return user?.orderHistory || [];
+    return (user?.orderHistory as OrderHistoryItem[]) || [];
   }
 
   static async updateOrderStatusInHistory(
@@ -124,19 +128,21 @@ export class UserService {
     status: "pending" | "preparing" | "ready" | "completed" | "cancelled"
   ): Promise<void> {
     const db = await connectToDatabase();
-    const usersCollection = db.collection<User>(USERS_COLLECTION);
+    const usersCollection = db.collection(USERS_COLLECTION);
 
     await usersCollection.updateOne(
       { 
-        _id: userId,
+        _id: new ObjectId(userId),
         "orderHistory.orderId": orderId
-      },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
       {
         $set: { 
           "orderHistory.$.status": status,
           updatedAt: new Date()
         }
-      }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any
     );
   }
 
@@ -150,10 +156,11 @@ export class UserService {
     }
   ): Promise<void> {
     const db = await connectToDatabase();
-    const usersCollection = db.collection<User>(USERS_COLLECTION);
+    const usersCollection = db.collection(USERS_COLLECTION);
 
-    await usersCollection.updateOne(
-      { _id: userId },
+    const result = await usersCollection.updateOne(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { _id: new ObjectId(userId) } as any,
       {
         $set: {
           ...verificationData,
@@ -161,5 +168,11 @@ export class UserService {
         }
       }
     );
+
+    console.log("Update verification data result:", { 
+      userId, 
+      matched: result.matchedCount, 
+      modified: result.modifiedCount 
+    });
   }
 }

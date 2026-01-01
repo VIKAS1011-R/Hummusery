@@ -11,6 +11,7 @@ import {
   Loader2,
   Plus,
   Minus,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar"; 
@@ -40,6 +41,7 @@ function PaymentPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const {
     isLoaded: razorpayLoaded,
@@ -78,7 +80,10 @@ function PaymentPageContent() {
   const handlePlaceOrder = async () => {
     if (!user || !menuItem) return;
 
-
+    if (!acceptedTerms) {
+      alert("Please accept the Terms & Conditions to proceed with payment.");
+      return;
+    }
 
     if (!razorpayLoaded) {
       alert("Payment system is loading. Please try again in a moment.");
@@ -227,6 +232,32 @@ function PaymentPageContent() {
               className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
             >
               Log In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to verify email if not verified
+  if (user && !user.isEmailVerified) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+        <Navbar />
+        <div className="pt-20 flex items-center justify-center min-h-screen">
+          <div className="text-center max-w-md mx-auto px-4">
+            <Mail className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Email Verification Required
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Please verify your email address to place orders and make payments.
+            </p>
+            <Link
+              href="/verify-email"
+              className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              Verify Email Now
             </Link>
           </div>
         </div>
@@ -394,9 +425,42 @@ function PaymentPageContent() {
               </div>
 
               <div className="space-y-3">
+                <div className="flex items-start space-x-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="payment-terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                  />
+                  <label
+                    htmlFor="payment-terms"
+                    className="text-sm text-gray-600 dark:text-gray-400"
+                  >
+                    I agree to the{" "}
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-500 hover:underline"
+                    >
+                      Terms & Conditions
+                    </a>
+                    {" "}and{" "}
+                    <a
+                      href="/refund-policy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-500 hover:underline"
+                    >
+                      Refund Policy
+                    </a>
+                  </label>
+                </div>
+
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={placingOrder}
+                  disabled={placingOrder || !acceptedTerms}
                   className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   {placingOrder ? (

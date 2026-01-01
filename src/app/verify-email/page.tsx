@@ -36,6 +36,22 @@ function VerifyEmailContent() {
     }
   }, [user, router]);
 
+  // Prevent navigation away if not verified
+  useEffect(() => {
+    if (user && !user.isEmailVerified) {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = '';
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
+  }, [user]);
+
   const handleTokenVerification = useCallback(async (verificationToken: string) => {
     try {
       setLoading(true);
@@ -53,7 +69,7 @@ function VerifyEmailContent() {
         setVerificationStatus('success');
         addToast(data.message, 'success');
         await refreshUser();
-        setTimeout(() => router.push('/settings'), 2000);
+        setTimeout(() => router.push('/'), 2000);
       } else {
         setVerificationStatus('error');
         addToast(data.error, 'error');
@@ -129,7 +145,7 @@ function VerifyEmailContent() {
         setVerificationStatus('success');
         addToast(data.message, 'success');
         await refreshUser();
-        setTimeout(() => router.push('/settings'), 2000);
+        setTimeout(() => router.push('/'), 2000);
       } else {
         setVerificationStatus('error');
         addToast(data.error, 'error');
@@ -220,7 +236,7 @@ function VerifyEmailContent() {
             
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               {verificationStatus === 'success' 
-                ? 'Welcome to Hummusery! Redirecting you...'
+                ? 'Welcome to Hummusery! Redirecting to home...'
                 : `We sent a 6-digit code to ${user.email}`
               }
             </p>
@@ -292,19 +308,15 @@ function VerifyEmailContent() {
               <div className="animate-pulse">
                 <div className="w-8 h-8 bg-green-100 rounded-full mx-auto mb-4"></div>
               </div>
-              <p className="text-green-600 font-medium">Redirecting to settings...</p>
+              <p className="text-green-600 font-medium">Redirecting to home...</p>
             </div>
           )}
 
-          {/* Back Button */}
+          {/* Info Message - No Back Button */}
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => router.push('/')}
-              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm mx-auto"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </button>
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+              Please verify your email to continue using Hummusery
+            </p>
           </div>
         </div>
       </div>

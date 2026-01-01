@@ -7,7 +7,10 @@ export async function POST(request: NextRequest) {
   try {
     const { email, otp } = await request.json();
 
+    console.log("Verify OTP request:", { email, otp: otp ? "***" : undefined });
+
     if (!email || !otp) {
+      console.log("Missing email or OTP");
       return NextResponse.json(
         { error: "Email and OTP are required" },
         { status: 400 }
@@ -21,13 +24,22 @@ export async function POST(request: NextRequest) {
     const user = await usersCollection.findOne({ email });
 
     if (!user) {
+      console.log("User not found:", email);
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
       );
     }
 
+    console.log("User found:", { 
+      email: user.email, 
+      isVerified: user.isEmailVerified,
+      hasOTP: !!user.emailVerificationOTP,
+      otpExpiry: user.otpExpiresAt
+    });
+
     if (user.isEmailVerified) {
+      console.log("Email already verified");
       return NextResponse.json(
         { error: "Email is already verified" },
         { status: 400 }
@@ -36,6 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Check if OTP exists and is not expired
     if (!user.emailVerificationOTP || !user.otpExpiresAt) {
+      console.log("No OTP or expiry found in database");
       return NextResponse.json(
         { error: "No verification code found. Please request a new one." },
         { status: 400 }
@@ -43,6 +56,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (new Date() > new Date(user.otpExpiresAt)) {
+      console.log("OTP expired:", { 
+        now: new Date(), 
+        expiry: new Date(user.otpExpiresAt) 
+      });
       return NextResponse.json(
         { error: "Verification code has expired. Please request a new one." },
         { status: 400 }
@@ -51,11 +68,17 @@ export async function POST(request: NextRequest) {
 
     // Verify OTP
     if (user.emailVerificationOTP !== otp) {
+      console.log("OTP mismatch:", { 
+        provided: otp, 
+        stored: user.emailVerificationOTP 
+      });
       return NextResponse.json(
         { error: "Invalid verification code" },
         { status: 400 }
       );
     }
+
+    console.log("OTP verified successfully");
 
     // Update user as verified and clear verification fields
     await usersCollection.updateOne(

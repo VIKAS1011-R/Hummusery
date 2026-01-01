@@ -160,6 +160,34 @@ export default function SettingsPage() {
     );
   }
 
+  // Redirect to verify email if not verified
+  if (user && !user.isEmailVerified) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+        <Navbar />
+        <PageWrapper>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center max-w-md mx-auto px-4">
+              <Mail className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                Email Verification Required
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Please verify your email address to access your account settings.
+              </p>
+              <Link
+                href="/verify-email"
+                className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+              >
+                Verify Email Now
+              </Link>
+            </div>
+          </div>
+        </PageWrapper>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
@@ -313,22 +341,22 @@ export default function SettingsPage() {
                 
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   {user?.isEmailVerified 
-                    ? "Your email address has been verified. You can place orders and access all features."
-                    : "Email verification is required to place orders and receive important updates."
+                    ? "Your email address has been verified. You'll receive order confirmations and important updates."
+                    : "Verify your email to receive order confirmations and important updates."
                   }
                 </p>
                 
                 {!user?.isEmailVerified && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                    <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-2">
-                      Email Verification Required For:
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                      Benefits of Email Verification:
                     </h4>
-                    <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
-                      <li>• <strong>Placing orders</strong> (required)</li>
+                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                       <li>• Order confirmations and updates</li>
                       <li>• Account security notifications</li>
                       <li>• Password reset capability</li>
                       <li>• Special offers and promotions</li>
+                      <li>• Important announcements</li>
                     </ul>
                   </div>
                 )}

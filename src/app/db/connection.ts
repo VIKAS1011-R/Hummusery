@@ -26,21 +26,24 @@ let lastHealthCheck = 0;
 const HEALTH_CHECK_INTERVAL = 300000; // 5 minutes - much less aggressive
 
 export async function connectToDatabase(): Promise<Db> {
-  // If we already have a connection, trust it and return immediately
-  // MongoDB's connection pool will handle connection health automatically
+  // If we already have a connection, return it
   if (db && client) {
-    return db;
+    try {
+      // Quick health check
+      await db.admin().ping();
+      return db;
+    } catch (error) {
+      // Connection is stale, reset and reconnect
+      console.log('Stale connection detected, reconnecting...');
+      client = null;
+      db = null;
+    }
   }
 
-  // If already connecting, wait for that connection with timeout
+  // If already connecting, wait for that connection
   if (isConnecting && connectionPromise) {
     try {
-      return await Promise.race([
-        connectionPromise,
-        new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Connection wait timeout')), 10000)
-        )
-      ]);
+      return await connectionPromise;
     } catch (error) {
       // Reset connection state and try again
       isConnecting = false;
@@ -50,22 +53,23 @@ export async function connectToDatabase(): Promise<Db> {
 
   const connectionString = process.env.DATABASE_URL;
   
+  console.log('Environment check:', {
+    hasConnectionString: !!connectionString,
+    nodeEnv: process.env.NODE_ENV,
+    connectionStringPreview: connectionString ? connectionString.replace(/:[^:@]*@/, ':***@') : 'undefined'
+  });
+  
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
-  // Set connecting flag and create connection promise with timeout
+  // Set connecting flag and create connection promise
   isConnecting = true;
-  connectionPromise = Promise.race([
-    createConnection(connectionString),
-    new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout after 30 seconds')), 30000)
-    )
-  ]);
+  connectionPromise = createConnection(connectionString);
 
   try {
     const result = await connectionPromise;
-    lastHealthCheck = Date.now(); // Mark successful connection
+    lastHealthCheck = Date.now();
     return result;
   } catch (error) {
     console.error('Database connection failed:', error);
@@ -78,22 +82,17 @@ export async function connectToDatabase(): Promise<Db> {
 
 async function createConnection(connectionString: string): Promise<Db> {
   try {
-    // Try with optimized options first
-    try {
-      client = new MongoClient(connectionString, CONNECTION_OPTIONS);
-      await client.connect();
-    } catch (configError) {
-      // Fallback to basic connection options
-      const basicOptions = {
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 45000,
-        connectTimeoutMS: 20000,
-      };
-      
-      client = new MongoClient(connectionString, basicOptions);
-      await client.connect();
-    }
+    // Use simplified connection options
+    const options = {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 0,
+      retryWrites: true,
+    };
+    
+    client = new MongoClient(connectionString, options);
+    await client.connect();
     
     // Get database instance
     db = client.db('Hummusery_Data');
@@ -101,7 +100,9 @@ async function createConnection(connectionString: string): Promise<Db> {
     // Verify connection with ping
     await db.admin().ping();
     
-    // Set up connection event listeners for production monitoring
+    console.log('✅ MongoDB connected successfully');
+    
+    // Set up connection event listeners
     setupConnectionListeners(client);
     
     return db;

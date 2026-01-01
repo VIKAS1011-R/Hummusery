@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,6 +52,12 @@ export default function SignupPage() {
     // Client-side validation
     if (!name || !email || !phone || !password || !confirm) {
       setError("Please fill out all fields");
+      setLoading(false);
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError("Please accept the Terms & Conditions to continue");
       setLoading(false);
       return;
     }
@@ -104,10 +111,11 @@ export default function SignupPage() {
         setPhone("");
         setPassword("");
         setConfirm("");
+        setAcceptedTerms(false);
 
-        // Redirect to settings page where users can verify email if needed
+        // Redirect to email verification page (mandatory)
         setTimeout(() => {
-          router.push("/settings");
+          router.push("/verify-email");
         }, 1000);
       } else {
         setError(data.error || "Something went wrong. Please try again.");
@@ -212,6 +220,40 @@ export default function SignupPage() {
             required
           />
         </label>
+
+        <div className="flex items-start space-x-2">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+            className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+            required
+          />
+          <label
+            htmlFor="terms"
+            className="text-sm text-gray-600 dark:text-gray-400"
+          >
+            I agree to the{" "}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-500 hover:underline"
+            >
+              Terms & Conditions
+            </a>
+            {" "}and{" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-500 hover:underline"
+            >
+              Privacy Policy
+            </a>
+          </label>
+        </div>
 
         <button
           type="submit"

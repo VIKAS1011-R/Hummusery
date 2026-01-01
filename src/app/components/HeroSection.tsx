@@ -19,10 +19,10 @@ const HeroSection: React.FC = () => {
             Explore Our Menu
           </a>
           <a 
-            href="#contact" 
+            href="/party-orders" 
             className="bg-white/90 dark:bg-gray-800/90 text-orange-700 dark:text-orange-400 px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl shadow-lg border border-orange-200 dark:border-orange-800 backdrop-blur-sm"
           >
-            Visit Us Today
+            Party Orders
           </a>
         </div>
       </div>
